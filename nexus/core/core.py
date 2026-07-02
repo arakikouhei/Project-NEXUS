@@ -4,6 +4,7 @@ Core System
 """
 
 from config.settings import settings
+from console import ConsoleInterface
 from nexus.ai.manager import AIManager
 from nexus.core.logger import logger
 
@@ -16,6 +17,7 @@ class NexusCore:
         self.version = settings.VERSION
         self.status = "OFFLINE"
         self.ai_manager = AIManager()
+        self.console = ConsoleInterface()
 
     def boot(self) -> None:
         """Start the NEXUS Core."""
@@ -31,3 +33,4 @@ class NexusCore:
         print("===================================")
 
         self.ai_manager.initialize()
+        self.console.start()
