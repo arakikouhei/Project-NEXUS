@@ -1,8 +1,6 @@
 """
 Project NEXUS
 Memory Manager
-
-Responsible for long-term memory management.
 """
 
 from nexus.core.logger import logger
@@ -13,27 +11,25 @@ class MemoryManager:
 
     def __init__(self) -> None:
         self.status = "OFFLINE"
-        self.memory_count = 0
+        self.memories = {}
 
     def initialize(self) -> None:
         """Initialize memory system."""
-
         self.status = "ONLINE"
 
         logger.info("Memory Manager initialized.")
-
         print("[Memory] Manager Online")
 
-    def save_memory(self, text: str) -> None:
-        """Save memory."""
+    def save(self, key: str, value: str) -> None:
+        """Save a memory."""
+        self.memories[key] = value
+        logger.info(f"Memory saved: {key} = {value}")
 
-        self.memory_count += 1
-
-        logger.info(f"Memory Saved: {text}")
+    def recall(self, key: str) -> str | None:
+        """Recall a memory."""
+        return self.memories.get(key)
 
     def shutdown(self) -> None:
         """Shutdown memory system."""
-
         self.status = "OFFLINE"
-
         logger.info("Memory Manager shutdown.")

@@ -1,16 +1,19 @@
 """
 Project NEXUS
 Basic AI Engine
-
-Temporary local response engine before connecting real LLM models.
 """
 
 from nexus.ai.engines.base_engine import BaseAIEngine
+from nexus.memory.manager import MemoryManager
 from nexus.core.logger import logger
 
 
 class BasicAIEngine(BaseAIEngine):
     """Simple rule-based AI engine."""
+
+    def __init__(self) -> None:
+        self.memory = MemoryManager()
+        self.memory.initialize()
 
     def generate_response(self, user_input: str) -> str:
         """Generate a simple local response."""
@@ -19,16 +22,28 @@ class BasicAIEngine(BaseAIEngine):
 
         text = user_input.strip()
 
-        if not text:
-            return "入力が空です。何か話しかけてください。"
+        # 名前を記憶する
+        if text.startswith("私の名前は") and text.endswith("です"):
+            name = text.replace("私の名前は", "").replace("です", "").strip()
 
+            self.memory.save("name", name)
+
+            return f"わかりました。あなたの名前は{name}さんですね。覚えました。"
+
+        # 名前を思い出す
+        if text == "私の名前は？":
+            name = self.memory.recall("name")
+
+            if name:
+                return f"あなたの名前は{name}さんです。"
+
+            return "まだあなたのお名前は教えてもらっていません。"
+
+        # 通常の応答
         if text in ["こんにちは", "こんちは", "hello", "Hello"]:
-            return "こんにちは。私はNEXUSです。現在は基本応答モードで動作しています。"
+            return "こんにちは。私はNEXUSです。"
 
         if text in ["おはよう", "おはようございます"]:
-            return "おはようございます。今日もProject NEXUSを起動してくれてありがとう。"
+            return "おはようございます！"
 
-        if text in ["何ができる？", "今何ができる？"]:
-            return "現在は文字入力、ログ記録、設定読み込み、AI Manager、Basic AI Engineが動作しています。"
-
-        return "現在は基本応答モードです。将来ここにローカルAIモデルを接続します。"
+        return "現在は基本応答モードです。"
