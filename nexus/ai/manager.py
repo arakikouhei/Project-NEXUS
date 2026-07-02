@@ -5,6 +5,7 @@ AI Manager
 
 from nexus.ai.engines.basic_engine import BasicAIEngine
 from nexus.core.logger import logger
+from nexus.memory.manager import MemoryManager
 
 
 class AIManager:
@@ -13,10 +14,13 @@ class AIManager:
     def __init__(self) -> None:
         self.model_name = "BasicLocalResponder"
         self.status = "OFFLINE"
-        self.engine = BasicAIEngine()
+
+        self.memory = MemoryManager()
+        self.engine = BasicAIEngine(self.memory)
 
     def initialize(self) -> None:
         self.status = "ONLINE"
+
         logger.info("AI Manager initialized.")
         print("[AI] Manager Online")
 
@@ -26,4 +30,5 @@ class AIManager:
 
     def shutdown(self) -> None:
         self.status = "OFFLINE"
+
         logger.info("AI Manager shutdown.")

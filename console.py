@@ -10,14 +10,12 @@ from nexus.core.logger import logger
 class ConsoleInterface:
     """Text-based interface for Project NEXUS."""
 
-    def __init__(self) -> None:
+    def __init__(self, ai_manager: AIManager) -> None:
         self.running = False
-        self.ai_manager = AIManager()
+        self.ai_manager = ai_manager
 
     def start(self) -> None:
-        """Start console interface."""
         self.running = True
-
         logger.info("Console Interface started.")
 
         print("\nNEXUS Console Online")
@@ -33,8 +31,6 @@ class ConsoleInterface:
             self.respond(user_input)
 
     def respond(self, user_input: str) -> None:
-        """Send input to AI Manager."""
-
         logger.info(f"User input: {user_input}")
 
         response = self.ai_manager.generate_response(user_input)
@@ -42,10 +38,6 @@ class ConsoleInterface:
         print(f"NEXUS > {response}\n")
 
     def stop(self) -> None:
-        """Stop console interface."""
-
         self.running = False
-
         logger.info("Console Interface stopped.")
-
         print("\nNEXUS Console Offline")
