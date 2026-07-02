@@ -12,8 +12,6 @@ class ConversationMemory:
         self.history = []
 
     def add(self, role: str, content: str) -> None:
-        """Add a message to history."""
-
         self.history.append({
             "role": role,
             "content": content,
@@ -23,9 +21,7 @@ class ConversationMemory:
             self.history.pop(0)
 
     def get_history(self) -> list:
-        """Return conversation history."""
         return self.history
 
     def clear(self) -> None:
-        """Clear conversation history."""
         self.history.clear()

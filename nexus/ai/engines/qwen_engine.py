@@ -3,6 +3,8 @@ Project NEXUS
 Qwen AI Engine
 """
 
+from pathlib import Path
+
 import requests
 
 from nexus.ai.engines.base_engine import BaseAIEngine
@@ -16,6 +18,7 @@ class QwenEngine(BaseAIEngine):
         self.url = "http://localhost:11434/api/generate"
         self.model = "qwen3:latest"
         self.memory = memory
+        self.prompt_path = Path("prompts/system_prompt.txt")
 
     def generate_response(self, user_input: str) -> str:
         prompt = self._build_prompt(user_input)
@@ -35,6 +38,15 @@ class QwenEngine(BaseAIEngine):
 
         except Exception as e:
             return f"Qwen Error: {e}"
+
+    def _load_system_prompt(self) -> str:
+        """Load system prompt."""
+
+        try:
+            return self.prompt_path.read_text(encoding="utf-8")
+
+        except FileNotFoundError:
+            return "あなたはProject NEXUSです。"
 
     def _build_prompt(self, user_input: str) -> str:
         memory_text = ""
@@ -56,9 +68,10 @@ class QwenEngine(BaseAIEngine):
             if memory_lines:
                 memory_text = "\n".join(memory_lines)
 
+        system_prompt = self._load_system_prompt()
+
         return f"""
-あなたはProject NEXUSという、ユーザー専用のAIアシスタントです。
-日本語で、自然で親しみやすく答えてください。
+{system_prompt}
 
 ユーザーについて知っている情報:
 {memory_text if memory_text else "まだ情報はありません。"}
