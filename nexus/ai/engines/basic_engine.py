@@ -11,6 +11,12 @@ from nexus.core.logger import logger
 class BasicAIEngine(BaseAIEngine):
     """Simple rule-based AI engine."""
 
+    KNOWLEDGE_PATTERNS = {
+        "私の名前は": ("name", "名前"),
+        "私の好きな色は": ("favorite_color", "好きな色"),
+        "私の趣味は": ("hobby", "趣味"),
+    }
+
     def __init__(self, memory: MemoryManager) -> None:
         self.memory = memory
 
@@ -19,20 +25,11 @@ class BasicAIEngine(BaseAIEngine):
 
         text = user_input.strip()
 
-        if text.startswith("私の名前は") and text.endswith("です"):
-            name = text.replace("私の名前は", "").replace("です", "").strip()
-            self.memory.save("name", name)
-            return f"わかりました。あなたの名前は{name}さんですね。覚えました。"
-
-        if text.startswith("私の好きな色は") and text.endswith("です"):
-            color = text.replace("私の好きな色は", "").replace("です", "").strip()
-            self.memory.save("favorite_color", color)
-            return f"好きな色は{color}ですね。覚えました。"
-
-        if text.startswith("私の趣味は") and text.endswith("です"):
-            hobby = text.replace("私の趣味は", "").replace("です", "").strip()
-            self.memory.save("hobby", hobby)
-            return f"趣味は{hobby}ですね。覚えました。"
+        for prefix, (key, label) in self.KNOWLEDGE_PATTERNS.items():
+            if text.startswith(prefix) and text.endswith("です"):
+                value = text.replace(prefix, "").replace("です", "").strip()
+                self.memory.save(key, value)
+                return f"{label}は{value}ですね。覚えました。"
 
         if text == "私の名前は？":
             name = self.memory.recall("name")
