@@ -24,7 +24,7 @@ class AIManager:
 
         elif settings.AI_ENGINE == "qwen":
             self.model_name = "Qwen"
-            self.engine = QwenEngine()
+            self.engine = QwenEngine(self.memory)
 
         else:
             raise ValueError(f"Unknown AI engine: {settings.AI_ENGINE}")
