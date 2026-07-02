@@ -3,6 +3,7 @@ Project NEXUS
 Console Interface
 """
 
+from nexus.ai.manager import AIManager
 from nexus.core.logger import logger
 
 
@@ -11,10 +12,12 @@ class ConsoleInterface:
 
     def __init__(self) -> None:
         self.running = False
+        self.ai_manager = AIManager()
 
     def start(self) -> None:
         """Start console interface."""
         self.running = True
+
         logger.info("Console Interface started.")
 
         print("\nNEXUS Console Online")
@@ -30,14 +33,19 @@ class ConsoleInterface:
             self.respond(user_input)
 
     def respond(self, user_input: str) -> None:
-        """Respond to user input."""
+        """Send input to AI Manager."""
+
         logger.info(f"User input: {user_input}")
 
-        print("NEXUS > 現在AIは未接続です。")
-        print("NEXUS > でも、会話インターフェースは正常に動作しています。\n")
+        response = self.ai_manager.generate_response(user_input)
+
+        print(f"NEXUS > {response}\n")
 
     def stop(self) -> None:
         """Stop console interface."""
+
         self.running = False
+
         logger.info("Console Interface stopped.")
+
         print("\nNEXUS Console Offline")
