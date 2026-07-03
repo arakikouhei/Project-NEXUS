@@ -21,6 +21,7 @@ class FileSystemTool(BaseTool):
             "ディレクトリ",
             "開いて",
             "読んで",
+            "見せて",
         ]
 
         return any(word in user_input for word in keywords)
@@ -28,18 +29,26 @@ class FileSystemTool(BaseTool):
     def execute(self, user_input: str) -> str:
         root = Path(".")
 
-        # フォルダ一覧
-        if "一覧" in user_input or "フォルダ" in user_input:
+        if "一覧" in user_input or "フォルダ一覧" in user_input:
             items = sorted(p.name for p in root.iterdir())
             return "\n".join(items)
 
-        # READMEを読む
         if "README" in user_input:
-            path = root / "README.md"
+            return self._read_file(root / "README.md")
 
-            if path.exists():
-                return path.read_text(encoding="utf-8")[:2000]
+        if "main.py" in user_input:
+            return self._read_file(root / "main.py")
 
-            return "README.md が見つかりません。"
+        if "console.py" in user_input:
+            return self._read_file(root / "console.py")
 
         return "操作を理解できませんでした。"
+
+    def _read_file(self, path: Path) -> str:
+        if not path.exists():
+            return f"{path.name} が見つかりません。"
+
+        if not path.is_file():
+            return f"{path.name} はファイルではありません。"
+
+        return path.read_text(encoding="utf-8")[:3000]

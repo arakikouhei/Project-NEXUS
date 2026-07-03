@@ -10,7 +10,7 @@ from nexus.core.logger import logger
 from nexus.memory.conversation import ConversationMemory
 from nexus.memory.manager import MemoryManager
 from nexus.tools.manager import ToolManager
-
+from nexus.agent.agent import NexusAgent
 
 class AIManager:
     """Controls all AI interactions."""
@@ -19,7 +19,7 @@ class AIManager:
         self.status = "OFFLINE"
         self.memory = MemoryManager()
         self.conversation = ConversationMemory()
-        self.tools = ToolManager()
+        self.agent = NexusAgent()
 
         if settings.AI_ENGINE == "basic":
             self.model_name = "BasicLocalResponder"
@@ -40,10 +40,10 @@ class AIManager:
     def generate_response(self, user_input: str) -> str:
         logger.info("Generating AI response...")
 
-        tool_response = self.tools.execute(user_input)
+        handled, result = self.agent.process(user_input)
 
-        if tool_response:
-            return tool_response
+        if handled:
+            return result
 
         self.conversation.add("user", user_input)
 
