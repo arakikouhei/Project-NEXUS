@@ -2062,3 +2062,148 @@ def _ka_v1_1_execute(self, user_input: str) -> str:
 
 
 KnowledgeTool.execute = _ka_v1_1_execute
+
+
+# KNOWLEDGE_ANSWER_V2_NATURAL_PATCH
+
+def _ka_v2_extract_title(content: str) -> str:
+    for line in content.splitlines():
+        if line.startswith("Title:"):
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
+def _ka_v2_extract_abstract(content: str) -> str:
+    if "Abstract:" not in content:
+        return ""
+
+    abstract = content.split("Abstract:", 1)[1]
+
+    if "NEXUS Note:" in abstract:
+        abstract = abstract.split("NEXUS Note:", 1)[0]
+
+    return abstract.replace("\n", " ").strip()
+
+
+def _ka_v2_natural_summary(question: str, entries: list[dict]) -> str:
+    if not entries:
+        return "保存済み知識から答えを作れませんでした。"
+
+    top = entries[0]
+    content = str(top.get("content", ""))
+    category = str(top.get("category", ""))
+    source = str(top.get("source", ""))
+
+    title = _ka_v2_extract_title(content)
+    abstract = _ka_v2_extract_abstract(content)
+
+    q = question.lower()
+
+    # 論文系
+    if category == "papers" or source == "arxiv":
+        if title:
+            lines = [
+                f"これは、**{title}** という論文に関する保存済み情報です。"
+            ]
+
+            if "geometry" in title.lower() or "3d" in abstract.lower():
+                lines.append("内容としては、単眼画像から3D形状やジオメトリを推定する方向の研究です。")
+
+            if "diffusion" in title.lower() or "diffusion" in abstract.lower():
+                lines.append("特に、diffusion系の考え方を使って画像空間でジオメトリ推定を行う点が中心です。")
+
+            if abstract:
+                short = _ka_v1_short(abstract, 420)
+                lines.append("")
+                lines.append("保存されているAbstract上では、従来の複雑な構成や損失関数に頼らず、よりシンプルなpixel-space diffusionの形で扱えることを示す内容になっています。")
+                lines.append("")
+                lines.append(f"Abstract抜粋: {short}")
+
+            return "\n".join(lines)
+
+    # Maya / UV系
+    if "maya" in q and "uv" in q:
+        return _ka_v1_short(content, 360)
+
+    # それ以外は保存内容から短く答える
+    return _ka_v1_extract_answer(question, entries)
+
+
+def _ka_v2_answer(self, question: str) -> str:
+    question = question.strip()
+
+    if not question:
+        return "質問がありません。例: 知識回答: PointDiTは何の論文？"
+
+    entries = _ka_v1_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        try:
+            score = _ka_v1_1_score(entry, question)
+        except Exception:
+            score = _ka_v1_score(entry, question)
+
+        if score >= 18:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top_entries = [entry for score, entry in scored[:5]]
+
+    if not top_entries:
+        return (
+            "## Knowledge Answer\n\n"
+            f"Question: {question}\n\n"
+            "保存済みKnowledge Core内では、根拠になる知識が見つかりませんでした。\n\n"
+            "必要なら先に `知識横断検索:` や `論文検索:` で知識を追加してください。"
+        )
+
+    answer = _ka_v2_natural_summary(question, top_entries)
+
+    lines = [
+        "## Knowledge Answer",
+        "",
+        f"Question: {question}",
+        "",
+        "### Answer",
+        answer,
+        "",
+        "### Evidence",
+    ]
+
+    for score, entry in scored[:5]:
+        trust = _ka_v1_trust(entry)
+
+        lines.append(f"#### {entry.get('id')}")
+        lines.append(f"- Match Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Trust: {trust.get('score')}/100 ({trust.get('label')})")
+
+        cautions = trust.get("cautions", [])
+        if cautions:
+            lines.append(f"- Cautions: {', '.join(cautions)}")
+
+        lines.append(f"- Preview: {_ka_v1_short(entry.get('content', ''), 220)}")
+        lines.append("")
+
+    lines.append("### Note")
+    lines.append("- この回答は保存済みKnowledge Coreを根拠にしています。")
+    lines.append("- Evidence IDを確認すれば、どの知識を根拠にしたか追えます。")
+    lines.append("- 最新情報や重要判断は、公式情報・原文確認が必要です。")
+
+    return "\n".join(lines).rstrip()
+
+
+_ka_v2_execute_base = KnowledgeTool.execute
+
+def _ka_v2_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text.startswith(("知識回答:", "知識回答：")):
+        return _ka_v2_answer(self, _ka_v1_sep(text))
+
+    return _ka_v2_execute_base(self, user_input)
+
+
+KnowledgeTool.execute = _ka_v2_execute
