@@ -19,3 +19,4 @@ backups/
 venv/
 data/worklog.json
 exports/
+data/knowledge/world_updates.json

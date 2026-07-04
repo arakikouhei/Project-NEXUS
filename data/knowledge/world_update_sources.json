@@ -1,0 +1,50 @@
+[
+  {
+    "id": "update-world-google-news-jp",
+    "category": "world",
+    "name": "Google News JP / World",
+    "url": "https://news.google.com/rss/search?q=%E4%B8%96%E7%95%8C%E6%83%85%E5%8B%A2&hl=ja&gl=JP&ceid=JP:ja",
+    "note": "世界情勢のRSS検索。複数媒体の見出し確認用。",
+    "trust_level": "medium",
+    "ttl_days": 3,
+    "created_at": "2026-07-04T20:36:37",
+    "updated_at": "2026-07-04T20:36:37",
+    "status": "active"
+  },
+  {
+    "id": "update-ai-google-news-jp",
+    "category": "ai",
+    "name": "Google News JP / AI",
+    "url": "https://news.google.com/rss/search?q=AI%20%E4%BA%BA%E5%B7%A5%E7%9F%A5%E8%83%BD&hl=ja&gl=JP&ceid=JP:ja",
+    "note": "AI関連ニュースのRSS検索。",
+    "trust_level": "medium",
+    "ttl_days": 7,
+    "created_at": "2026-07-04T20:36:37",
+    "updated_at": "2026-07-04T20:36:37",
+    "status": "active"
+  },
+  {
+    "id": "update-3dcg-google-news-jp",
+    "category": "3dcg",
+    "name": "Google News JP / 3DCG",
+    "url": "https://news.google.com/rss/search?q=3DCG%20Maya%20Blender&hl=ja&gl=JP&ceid=JP:ja",
+    "note": "3DCG・Maya・Blender関連ニュースのRSS検索。",
+    "trust_level": "medium",
+    "ttl_days": 14,
+    "created_at": "2026-07-04T20:36:37",
+    "updated_at": "2026-07-04T20:36:37",
+    "status": "active"
+  },
+  {
+    "id": "update-dev-google-news-jp",
+    "category": "development",
+    "name": "Google News JP / Software Development",
+    "url": "https://news.google.com/rss/search?q=%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA%20Python%20GitHub&hl=ja&gl=JP&ceid=JP:ja",
+    "note": "開発・Python・GitHub関連ニュースのRSS検索。",
+    "trust_level": "medium",
+    "ttl_days": 14,
+    "created_at": "2026-07-04T20:36:37",
+    "updated_at": "2026-07-04T20:36:37",
+    "status": "active"
+  }
+]

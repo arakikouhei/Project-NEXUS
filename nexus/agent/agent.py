@@ -86,6 +86,31 @@ class NexusAgent:
 
             return False, None
 
+        # WORLD_UPDATE_ROUTING_BYPASS_V1
+        update_prefixes = (
+            "更新ヘルプ",
+            "知識更新状況",
+            "更新ソース一覧",
+            "更新ログ一覧",
+            "更新ログ一覧:",
+            "更新ログ一覧：",
+            "更新ソース追加:",
+            "更新ソース追加：",
+            "世界情勢更新",
+            "社会情勢更新",
+            "AIニュース更新",
+            "3DCGニュース更新",
+            "開発ニュース更新",
+        )
+
+        if stripped_input.startswith(update_prefixes):
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         normalized = self.normalizer.normalize(user_input)
 
         result = self.tools.execute(normalized.text)
