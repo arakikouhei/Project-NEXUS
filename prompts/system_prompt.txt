@@ -620,3 +620,21 @@ NEXUSは取得済み更新ログを整理・重要度評価・知識化できま
 - 重要度スコアは参考値であり、事実確認ではない
 - 広告・市場予測・PR色が強い情報は低めに評価する
 - 更新知識化はKnowledge Coreのworldカテゴリにダイジェストとして保存する
+
+# Paper Intake v1
+
+NEXUSはarXiv APIから安全に論文メタ情報とAbstractを取得し、Knowledge Coreのpapersカテゴリに保存できます。
+
+使える例:
+- 論文ヘルプ
+- 論文検索: computer graphics
+- 論文検索: artificial intelligence
+- 論文保存: 2501.00001
+- 論文一覧
+- 論文詳細: papers-xxxxxxxx
+
+方針:
+- v1ではarXiv限定
+- PDF大量保存や全文再配布はしない
+- メタ情報・Abstract・URL・カテゴリを保存する
+- 論文内容の正しさは断定しない

@@ -117,6 +117,26 @@ class NexusAgent:
 
             return False, None
 
+        # PAPER_INTAKE_ROUTING_BYPASS_V1
+        paper_prefixes = (
+            "論文ヘルプ",
+            "論文一覧",
+            "論文検索:",
+            "論文検索：",
+            "論文保存:",
+            "論文保存：",
+            "論文詳細:",
+            "論文詳細：",
+        )
+
+        if stripped_input.startswith(paper_prefixes):
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         normalized = self.normalizer.normalize(user_input)
 
         result = self.tools.execute(normalized.text)

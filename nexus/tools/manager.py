@@ -25,6 +25,7 @@ from nexus.tools.vision_memory import VisionMemoryTool
 from nexus.tools.knowledge import KnowledgeTool
 from nexus.tools.source_registry import SourceRegistryTool
 from nexus.tools.world_update import WorldUpdateTool
+from nexus.tools.paper_intake import PaperIntakeTool
 from nexus.tools.app import AppControlTool
 from nexus.tools.math import AdvancedMathTool
 from nexus.tools.calculator import CalculatorTool
@@ -62,6 +63,7 @@ class ToolManager:
         self.register(KnowledgeTool())
         self.register(SourceRegistryTool())
         self.register(WorldUpdateTool())
+        self.register(PaperIntakeTool())
         self.register(AppControlTool())
 
         # Math tools must come before general calculator, but after specific tools.
