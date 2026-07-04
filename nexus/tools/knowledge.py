@@ -552,3 +552,352 @@ def _ks_v2_execute(self, user_input: str) -> str:
 
 KnowledgeTool.can_handle = _ks_v2_can_handle
 KnowledgeTool.execute = _ks_v2_execute
+
+
+# KNOWLEDGE_DIGEST_V1_SAFE_PATCH
+
+def _kd_v1_all_entries(self) -> list[dict]:
+    try:
+        return self.store.list_entries(limit=2000)
+    except TypeError:
+        return self.store.list_entries()
+
+
+def _kd_v1_short(content: str, limit: int = 220) -> str:
+    content = str(content).replace("\n", " ").strip()
+    if len(content) > limit:
+        return content[:limit].rstrip() + "..."
+    return content
+
+
+def _kd_v1_digest(self) -> str:
+    entries = _kd_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Digest\n\n保存済み知識はまだありません。"
+
+    by_category = {}
+    by_source = {}
+    tag_counts = {}
+
+    for entry in entries:
+        category = entry.get("category", "unknown")
+        source = entry.get("source", "unknown")
+
+        by_category[category] = by_category.get(category, 0) + 1
+        by_source[source] = by_source.get(source, 0) + 1
+
+        for tag in entry.get("tags", []):
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+    lines = [
+        "## Knowledge Digest",
+        "",
+        f"Total Entries: {len(entries)}",
+        "",
+        "### Categories",
+    ]
+
+    for category, count in sorted(by_category.items(), key=lambda x: (-x[1], x[0])):
+        lines.append(f"- {category}: {count}")
+
+    lines.append("")
+    lines.append("### Sources")
+
+    for source, count in sorted(by_source.items(), key=lambda x: (-x[1], x[0]))[:12]:
+        lines.append(f"- {source}: {count}")
+
+    lines.append("")
+    lines.append("### Frequent Tags")
+
+    top_tags = sorted(tag_counts.items(), key=lambda x: (-x[1], x[0]))[:15]
+
+    if top_tags:
+        for tag, count in top_tags:
+            lines.append(f"- {tag}: {count}")
+    else:
+        lines.append("- タグはまだ少なめです。")
+
+    lines.append("")
+    lines.append("### Recent Entries")
+
+    for entry in list(reversed(entries[-8:])):
+        lines.append(f"- [{entry.get('id')}] {entry.get('category')} / {entry.get('source')}")
+        lines.append(f"  {_kd_v1_short(entry.get('content', ''), 180)}")
+
+    lines.append("")
+    lines.append("Note: Knowledge Core内の保存済み知識を簡易集計しています。")
+
+    return "\n".join(lines)
+
+
+def _kd_v1_category整理(self) -> str:
+    entries = _kd_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Category Review\n\n保存済み知識はまだありません。"
+
+    categories = {}
+    uncategorized = []
+
+    for entry in entries:
+        category = entry.get("category", "unknown")
+        categories.setdefault(category, []).append(entry)
+
+        if category in {"", "unknown", "general"}:
+            uncategorized.append(entry)
+
+    lines = [
+        "## Knowledge Category Review",
+        "",
+        "### Category Counts",
+    ]
+
+    for category, items in sorted(categories.items(), key=lambda x: (-len(x[1]), x[0])):
+        lines.append(f"- {category}: {len(items)}")
+
+    lines.append("")
+    lines.append("### Category Notes")
+
+    if uncategorized:
+        lines.append(f"- general/unknown系が {len(uncategorized)} 件あります。必要ならカテゴリを分ける候補です。")
+    else:
+        lines.append("- 大きな未分類偏りは見つかりませんでした。")
+
+    if len(categories) <= 2 and len(entries) >= 10:
+        lines.append("- 知識数に対してカテゴリ数が少なめです。papers/world/3dcg/development等に分けると探しやすくなります。")
+
+    lines.append("")
+    lines.append("### Samples")
+
+    for category, items in sorted(categories.items(), key=lambda x: x[0])[:10]:
+        lines.append(f"#### {category}")
+        for entry in items[:3]:
+            lines.append(f"- {entry.get('id')}: {_kd_v1_short(entry.get('content', ''), 120)}")
+
+    return "\n".join(lines)
+
+
+def _kd_v1_duplicates(self) -> str:
+    entries = _kd_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Duplicate Check\n\n保存済み知識はまだありません。"
+
+    seen = {}
+    duplicates = []
+
+    for entry in entries:
+        content = str(entry.get("content", "")).strip().lower()
+        normalized = " ".join(content.split())
+
+        key = normalized[:220]
+
+        if key in seen:
+            duplicates.append((seen[key], entry))
+        else:
+            seen[key] = entry
+
+    # タイトル/URLっぽい重複も軽く見る
+    url_seen = {}
+    url_duplicates = []
+
+    for entry in entries:
+        content = str(entry.get("content", ""))
+        urls = []
+        for part in content.split():
+            if part.startswith("http://") or part.startswith("https://"):
+                urls.append(part.strip())
+
+        for url in urls:
+            if url in url_seen:
+                url_duplicates.append((url_seen[url], entry, url))
+            else:
+                url_seen[url] = entry
+
+    lines = [
+        "## Knowledge Duplicate Check",
+        "",
+        f"Total Entries: {len(entries)}",
+        f"Exact-like Duplicates: {len(duplicates)}",
+        f"URL Duplicates: {len(url_duplicates)}",
+        "",
+    ]
+
+    if not duplicates and not url_duplicates:
+        lines.append("大きな重複は見つかりませんでした。")
+        return "\n".join(lines)
+
+    if duplicates:
+        lines.append("### Exact-like Duplicates")
+        for a, b in duplicates[:10]:
+            lines.append(f"- {a.get('id')} <-> {b.get('id')}")
+            lines.append(f"  {_kd_v1_short(b.get('content', ''), 160)}")
+
+    if url_duplicates:
+        lines.append("")
+        lines.append("### URL Duplicates")
+        for a, b, url in url_duplicates[:10]:
+            lines.append(f"- {a.get('id')} <-> {b.get('id')}")
+            lines.append(f"  URL: {url}")
+
+    lines.append("")
+    lines.append("Note: v1は削除せず、候補を表示するだけです。")
+
+    return "\n".join(lines)
+
+
+def _kd_v1_staleness(self) -> str:
+    from datetime import datetime
+
+    entries = _kd_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Staleness Check\n\n保存済み知識はまだありません。"
+
+    now = datetime.now()
+    oldish = []
+    time_sensitive = []
+
+    for entry in entries:
+        content = str(entry.get("content", "")).lower()
+        source = str(entry.get("source", "")).lower()
+        category = str(entry.get("category", "")).lower()
+
+        created = entry.get("created_at") or entry.get("updated_at") or ""
+        age_days = None
+
+        try:
+            dt = datetime.fromisoformat(str(created).replace("Z", ""))
+            age_days = (now - dt).days
+        except Exception:
+            pass
+
+        is_time_sensitive = (
+            category == "world"
+            or "world_update" in source
+            or "news" in content
+            or "fetched_at" in content
+            or "expires_at" in content
+        )
+
+        if is_time_sensitive:
+            time_sensitive.append((age_days, entry))
+
+        if age_days is not None and age_days >= 90:
+            oldish.append((age_days, entry))
+
+    lines = [
+        "## Knowledge Staleness Check",
+        "",
+        f"Total Entries: {len(entries)}",
+        f"Time-sensitive Entries: {len(time_sensitive)}",
+        f"Old Entries 90+ days: {len(oldish)}",
+        "",
+        "### Time-sensitive Samples",
+    ]
+
+    if time_sensitive:
+        for age_days, entry in time_sensitive[:10]:
+            age_text = "unknown" if age_days is None else f"{age_days} days"
+            lines.append(f"- [{entry.get('id')}] age={age_text} / {entry.get('category')} / {entry.get('source')}")
+            lines.append(f"  {_kd_v1_short(entry.get('content', ''), 140)}")
+    else:
+        lines.append("- 時間で古くなりやすい知識は少なめです。")
+
+    lines.append("")
+    lines.append("### Old Entries")
+
+    if oldish:
+        for age_days, entry in oldish[:10]:
+            lines.append(f"- [{entry.get('id')}] age={age_days} days / {entry.get('category')} / {entry.get('source')}")
+    else:
+        lines.append("- 90日以上古い知識は見つかりませんでした。")
+
+    lines.append("")
+    lines.append("Note: v1は古さの候補表示のみ。削除や更新はしません。")
+
+    return "\n".join(lines)
+
+
+def _kd_v1_maintenance(self) -> str:
+    entries = _kd_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Maintenance\n\n保存済み知識はまだありません。"
+
+    digest = _kd_v1_digest(self)
+    duplicates = _kd_v1_duplicates(self)
+    staleness = _kd_v1_staleness(self)
+
+    lines = [
+        "## Knowledge Maintenance",
+        "",
+        "### Quick Status",
+        f"- Total Entries: {len(entries)}",
+        "",
+        "### Recommended Checks",
+        "- 知識ダイジェスト: 全体量・カテゴリ・ソースを見る",
+        "- 知識重複チェック: 同じ内容や同じURLの重複候補を見る",
+        "- 知識古さチェック: world/news系の古さを見る",
+        "",
+        "### Digest Preview",
+    ]
+
+    # 長すぎないように一部だけ
+    for line in digest.splitlines()[:28]:
+        lines.append(line)
+
+    lines.append("")
+    lines.append("### Duplicate Preview")
+
+    for line in duplicates.splitlines()[:16]:
+        lines.append(line)
+
+    lines.append("")
+    lines.append("### Staleness Preview")
+
+    for line in staleness.splitlines()[:18]:
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
+_kd_v1_can_handle_base = KnowledgeTool.can_handle
+_kd_v1_execute_base = KnowledgeTool.execute
+
+def _kd_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _kd_v1_can_handle_base(self, user_input)
+        or text == "知識ダイジェスト"
+        or text == "知識カテゴリ整理"
+        or text == "知識重複チェック"
+        or text == "知識古さチェック"
+        or text == "知識メンテナンス"
+    )
+
+
+def _kd_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text == "知識ダイジェスト":
+        return _kd_v1_digest(self)
+
+    if text == "知識カテゴリ整理":
+        return _kd_v1_category整理(self)
+
+    if text == "知識重複チェック":
+        return _kd_v1_duplicates(self)
+
+    if text == "知識古さチェック":
+        return _kd_v1_staleness(self)
+
+    if text == "知識メンテナンス":
+        return _kd_v1_maintenance(self)
+
+    return _kd_v1_execute_base(self, user_input)
+
+
+KnowledgeTool.can_handle = _kd_v1_can_handle
+KnowledgeTool.execute = _kd_v1_execute
