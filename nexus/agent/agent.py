@@ -233,6 +233,10 @@ class NexusAgent:
             "知識インポート:",
             "メモ取り込み:",
             "インポート確認:",
+            "研究ワークフロー開始:",
+            "論文ワークフロー:",
+            "論文から知識化:",
+            "研究まとめ:",
         )
 
         if stripped_input in system_health_commands:

@@ -21,6 +21,7 @@ from nexus.tools.backup_export import BackupExportTool
 from nexus.tools.command_help import CommandHelpTool
 from nexus.tools.project_memory import ProjectMemoryTool
 from nexus.tools.knowledge_import import KnowledgeImportTool
+from nexus.tools.research_workflow import ResearchWorkflowTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
@@ -62,6 +63,7 @@ class ToolManager:
         self.register(CommandHelpTool())
         self.register(ProjectMemoryTool())
         self.register(KnowledgeImportTool())
+        self.register(ResearchWorkflowTool())
         self.register(TransferTool())
         self.register(SafeSearchTool())
         self.register(SafeResearchTool())

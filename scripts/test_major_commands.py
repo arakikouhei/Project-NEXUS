@@ -82,6 +82,21 @@ TESTS = [
         expected="## Backup / Export List",
     ),
     CommandTest(
+        name="Research workflow start",
+        command="研究ワークフロー開始: diffusion",
+        expected="## Research Workflow Started",
+    ),
+    CommandTest(
+        name="Research workflow summary",
+        command="研究まとめ: diffusion",
+        expected="## Research Summary",
+    ),
+    CommandTest(
+        name="Research workflow converted knowledge",
+        command="知識検索: research-fafab9fc",
+        expected="research-fafab9fc",
+    ),
+    CommandTest(
         name="Knowledge import preview",
         command="インポート確認: tmp/import_test_note.md",
         expected="## Import Preview",

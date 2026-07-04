@@ -145,5 +145,32 @@
     "created_at": "2026-07-04T22:27:11",
     "updated_at": "2026-07-04T22:27:11",
     "archived": false
+  },
+  {
+    "id": "research-fafab9fc",
+    "category": "research",
+    "title": "Research Note: papers-fafab9fc",
+    "content": "# Research Note\n\n## Source Paper\n\n- ID: papers-fafab9fc\n- Title: untitled\n- Source: arxiv\n\n## Summary Basis\n\nThis research note was generated from the saved paper metadata/abstract in Knowledge Core.\n\n## Original Content\n\nPaper Source: arXiv\narXiv ID: 2607.02515v1\nTitle: PointDiT: Pixel-Space Diffusion for Monocular Geometry Estimation\nAuthors: Haofei Xu, Rundi Wu, Philipp Henzler, Nikolai Kalischek, Michael Oechsle, Fabian Manhardt, Marc Pollefeys, Andreas Geiger, Federico Tombari, Michael Niemeyer\nPublished: 2026-07-02T17:59:56Z\nUpdated: 2026-07-02T17:59:56Z\nCategories: cs.CV\nURL: https://arxiv.org/abs/2607.02515v1\nPDF URL: https://arxiv.org/pdf/2607.02515v1\nFetched At: 2026-07-04T20:49:57\n\nAbstract:\nState-of-the-art single-image 3D reconstruction methods often rely on complex hybrid architectures and loss functions, or compress geometry into latent spaces in order to leverage pre-trained latent diffusion models. In this work, we show that such architectural overhead and intricate loss formulations are unnecessary. We introduce a minimalist pixel-space Diffusion Transformer, built on a plain ViT, that operates directly on raw 3D point map patches and is conditioned on image tokens from a pre-trained DINOv3. Unlike existing latent diffusion approaches, we train our diffusion backbone entirely from scratch, eliminating the need for point map tokenizers. Despite its simplicity, our approach surpasses complex latent-based diffusion models while remaining significantly simpler than hybrid alternatives. Notably, it produces sharper geometric structure and is more robust in highly ambiguous regions, such as transparent objects.\n\nNEXUS Note:\n- v1ではメタ情報とAbstractのみ保存。\n- 内容の理解・評価・再現性確認には原文確認が必要。\n- ライセンスや利用条件に注意。\n\n## Workflow Notes\n\n- Review the original paper before using this as a strong claim.\n- arXiv papers may not be peer-reviewed.\n- Use this note as a research index, not final proof.\n",
+    "tags": [
+      "arxiv",
+      "2607.02515v1",
+      "cs.CV",
+      "PointDiT",
+      "Pixel-Space",
+      "Diffusion",
+      "for",
+      "Monocular",
+      "Geometry",
+      "Estimation",
+      "research",
+      "paper_workflow"
+    ],
+    "source": "arxiv",
+    "source_type": "derived_from_paper",
+    "source_paper_id": "papers-fafab9fc",
+    "source_url": "",
+    "created_at": "2026-07-04T22:32:05",
+    "updated_at": "2026-07-04T22:32:05",
+    "archived": false
   }
 ]

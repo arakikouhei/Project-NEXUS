@@ -919,3 +919,20 @@ NEXUSはローカルのtxt/mdファイルを知識として安全に取り込め
 - source_pathとdigestを保存する
 - 重複取り込みを避ける
 - v1では .txt / .md / .markdown の300KB以下に限定する
+
+
+# Research Workflow v1
+
+NEXUSは論文検索から知識化までの研究ワークフローを案内できます。
+
+使える例:
+- 研究ワークフロー開始: topic
+- 論文ワークフロー: topic
+- 論文から知識化: papers-id
+- 研究まとめ: topic
+
+方針:
+- 勝手に大量保存しない
+- 既存のPaper IntakeとKnowledge Coreをつなぐ
+- 論文から知識化する時は保存済みpapers-idを使う
+- arXiv等は査読済みとは限らないため注意を残す
