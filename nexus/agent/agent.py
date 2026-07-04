@@ -230,6 +230,9 @@ class NexusAgent:
             "NEXUS開発状況",
             "NEXUS現在地",
             "NEXUSマイルストーン",
+            "知識インポート:",
+            "メモ取り込み:",
+            "インポート確認:",
         )
 
         if stripped_input in system_health_commands:

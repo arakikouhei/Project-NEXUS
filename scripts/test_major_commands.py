@@ -82,6 +82,16 @@ TESTS = [
         expected="## Backup / Export List",
     ),
     CommandTest(
+        name="Knowledge import preview",
+        command="インポート確認: tmp/import_test_note.md",
+        expected="## Import Preview",
+    ),
+    CommandTest(
+        name="Knowledge import search",
+        command="知識検索: NEXUS Import Test Note",
+        expected="imported-c5c64a3f",
+    ),
+    CommandTest(
         name="Project memory overview",
         command="NEXUS記憶",
         expected="## NEXUS Project Memory",

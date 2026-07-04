@@ -125,5 +125,25 @@
       "Geometry",
       "Estimation"
     ]
+  },
+  {
+    "id": "imported-c5c64a3f",
+    "category": "imported",
+    "title": "NEXUS Import Test Note",
+    "content": "# NEXUS Import Test Note\n\nこれはKnowledge Import v1のテスト用メモです。\n\nMaya UV と NEXUS の知識取り込みテスト。",
+    "tags": [
+      "imported",
+      "local_note",
+      "md",
+      "3dcg",
+      "nexus"
+    ],
+    "source": "local_file",
+    "source_type": "local_file",
+    "source_path": "tmp/import_test_note.md",
+    "digest": "c5c64a3f47c8e9119e5b5ff2474f1677f3584252bbee787127765ec8a2929fad",
+    "created_at": "2026-07-04T22:27:11",
+    "updated_at": "2026-07-04T22:27:11",
+    "archived": false
   }
 ]
