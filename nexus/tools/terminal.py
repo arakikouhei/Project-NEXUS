@@ -5,6 +5,7 @@ Safe Terminal Tool
 
 import shlex
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 from nexus.tools.base_tool import BaseTool
@@ -18,6 +19,7 @@ class TerminalTool(BaseTool):
 
     def __init__(self) -> None:
         self.working_directory = Path.cwd()
+        self.log_file = self.working_directory / "logs" / "terminal.log"
 
         self.dangerous_commands = {
             "rm",
@@ -72,19 +74,23 @@ class TerminalTool(BaseTool):
         command = self._normalize_command(user_input)
 
         if not command:
+            self._write_log("DENIED", command, "empty command")
             return "実行するコマンドがありません。"
 
         if self._is_blocked(command):
+            self._write_log("BLOCKED", command, "dangerous command or symbol")
             return f"安全のため、このコマンドは実行できません: {command}"
 
         parts = self._split_command(command)
 
         if not parts:
+            self._write_log("DENIED", command, "parse failed")
             return "コマンドを解析できませんでした。"
 
         is_valid, message = self._validate_command(parts)
 
         if not is_valid:
+            self._write_log("DENIED", command, message)
             return message
 
         try:
@@ -100,6 +106,12 @@ class TerminalTool(BaseTool):
             output = result.stdout.strip()
             error = result.stderr.strip()
 
+            self._write_log(
+                "ALLOWED",
+                command,
+                f"returncode={result.returncode}",
+            )
+
             if output:
                 return self._limit_output(output)
 
@@ -109,9 +121,11 @@ class TerminalTool(BaseTool):
             return "コマンドは実行されましたが、出力はありません。"
 
         except subprocess.TimeoutExpired:
+            self._write_log("TIMEOUT", command, "timeout=10s")
             return "コマンドがタイムアウトしました。"
 
         except Exception as error:
+            self._write_log("ERROR", command, str(error))
             return f"ターミナル実行中にエラーが発生しました: {error}"
 
     def _normalize_command(self, user_input: str) -> str:
@@ -241,3 +255,21 @@ class TerminalTool(BaseTool):
             return text
 
         return text[:max_length] + "\n\n...出力が長いため省略しました。"
+
+    def _write_log(self, status: str, command: str, detail: str = "") -> None:
+        try:
+            self.log_file.parent.mkdir(parents=True, exist_ok=True)
+
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            if detail:
+                line = f"[{now}] {status}: {command} | {detail}\n"
+            else:
+                line = f"[{now}] {status}: {command}\n"
+
+            with self.log_file.open("a", encoding="utf-8") as file:
+                file.write(line)
+
+        except Exception:
+            # ログ保存に失敗しても、ツール本体の実行は止めない
+            pass
