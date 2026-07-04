@@ -810,3 +810,19 @@ NEXUSは保存済みKnowledge Coreを会話中に自動参照するためのON/O
 - ON/OFFを明示的に切り替える
 - 雑談・英語練習・既存コマンドは邪魔しない
 - v1ではまず候補表示を中心にする
+
+
+# Knowledge Auto Recall v1
+
+NEXUSは知識自動参照ONのときだけ、自然な質問をKnowledge Answerへ自動ルーティングできます。
+
+例:
+- MayaのUVってどう使うの？
+- PointDiTって何？
+- diffusionって3DCGに関係ある？
+
+方針:
+- 知識自動参照ONの時だけ動く
+- 既存コマンドは邪魔しない
+- 雑談・英語練習・翻訳は奪わない
+- 根拠がある場合だけKnowledge Answerを返す

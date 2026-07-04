@@ -186,11 +186,133 @@ class NexusAgent:
                 and any(term in stripped for term in known_terms)
             )
 
-        if looks_like_knowledge_question(stripped_input):
+        # KNOWLEDGE_ANSWER_POLISH_RESPECT_AUTO_RECALL_V1
+        def polish_auto_recall_enabled() -> bool:
+            import json
+            from pathlib import Path
+
+            settings_path = Path("data/knowledge/auto_recall_settings.json")
+
+            if not settings_path.exists():
+                return False
+
+            try:
+                data = json.loads(settings_path.read_text(encoding="utf-8"))
+                return bool(data.get("enabled", False))
+            except Exception:
+                return False
+
+        if polish_auto_recall_enabled() and looks_like_knowledge_question(stripped_input):
             knowledge_query = f"知識回答: {stripped_input}"
             result = self.tools.execute(knowledge_query)
 
             if result is not None:
+                return True, result
+
+        # KNOWLEDGE_AUTO_RECALL_V1
+        def auto_recall_enabled() -> bool:
+            import json
+            from pathlib import Path
+
+            settings_path = Path("data/knowledge/auto_recall_settings.json")
+
+            if not settings_path.exists():
+                return False
+
+            try:
+                data = json.loads(settings_path.read_text(encoding="utf-8"))
+                return bool(data.get("enabled", False))
+            except Exception:
+                return False
+
+        def should_auto_recall(value: str) -> bool:
+            stripped = value.strip()
+
+            if not stripped:
+                return False
+
+            # 既存コマンドは絶対に邪魔しない
+            command_prefixes = (
+                "知識",
+                "論文",
+                "画像",
+                "更新",
+                "情報源",
+                "安全検索",
+                "調べて",
+                "web",
+                "url",
+                "git",
+                "コミット",
+                "テスト",
+                "計算",
+                "単位変換",
+                "アプリ",
+                "ダッシュボード",
+                "できること",
+                "exit",
+                "quit",
+                "終了",
+            )
+
+            if stripped.startswith(command_prefixes):
+                return False
+
+            # 雑談・英語練習っぽいものは奪わない
+            casual_blockers = (
+                "疲れた",
+                "眠い",
+                "おはよう",
+                "こんにちは",
+                "こんばんは",
+                "ありがとう",
+                "英語で",
+                "英訳",
+                "翻訳",
+                "発音",
+                "韓国語",
+            )
+
+            if any(word in stripped for word in casual_blockers):
+                return False
+
+            question_markers = (
+                "とは",
+                "って何",
+                "ってなに",
+                "は何",
+                "はなに",
+                "について教えて",
+                "根拠つきで",
+                "根拠付きで",
+                "どう使う",
+                "関係ある",
+                "何の論文",
+            )
+
+            domain_hints = (
+                "Maya",
+                "UV",
+                "PointDiT",
+                "diffusion",
+                "Diffusion",
+                "arXiv",
+                "3DCG",
+                "geometry",
+                "ジオメトリ",
+                "論文",
+            )
+
+            return (
+                any(marker in stripped for marker in question_markers)
+                and any(hint in stripped for hint in domain_hints)
+            )
+
+        if auto_recall_enabled() and should_auto_recall(stripped_input):
+            knowledge_query = f"知識回答: {stripped_input}"
+            result = self.tools.execute(knowledge_query)
+
+            if result is not None and "根拠になる知識が見つかりませんでした" not in result:
                 return True, result
 
         # PAPER_INTAKE_ROUTING_BYPASS_V1
