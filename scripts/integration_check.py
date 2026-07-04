@@ -25,9 +25,16 @@ def check_python_compile() -> bool:
         "nexus/tools/context.py",
         "nexus/tools/system.py",
         "nexus/tools/voice.py",
+        "nexus/tools/test.py",
+        "nexus/tools/dashboard.py",
+        "nexus/tools/worklog.py",
+        "nexus/tools/hardware.py",
+        "nexus/tools/capability.py",
         "nexus/context/builder.py",
         "nexus/agent/agent.py",
         "nexus/agent/planner.py",
+        "nexus/device/interface.py",
+        "nexus/device/mock.py",
     ]
 
     ok = True
@@ -65,6 +72,7 @@ def check_tools() -> bool:
 
     tests = [
         ("nexus状況", "NEXUS Context"),
+        ("ダッシュボード", "NEXUS Dashboard"),
         ("システム情報", "System Info"),
         ("git要約", "Git Summary"),
         ("変更確認", "Git Diff Summary"),
@@ -73,6 +81,10 @@ def check_tools() -> bool:
         ("ls nexus/tools", "manager.py"),
         ("git push", "許可されていないgitコマンド"),
         ("rm README.md", "安全のため"),
+        ("ハードウェア状態", "Hardware Status"),
+        ("球体準備", "Sphere Readiness"),
+        ("できること", "NEXUS Capabilities"),
+        ("作業ログ", "Work Log"),
     ]
 
     ok = True
@@ -92,7 +104,7 @@ def check_tools() -> bool:
         else:
             print(f"NG: {user_input}")
             print("期待:", expected)
-            print("結果:", result[:300])
+            print("結果:", result[:500])
             ok = False
 
     return ok

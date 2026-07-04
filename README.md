@@ -44,3 +44,28 @@ The foundation of the platform has been completed, including:
 - Project Index
 
 The next milestone is **v0.4.0**, focusing on development tools such as Terminal, Git, and Web integration.
+
+---
+
+## Pre-Sphere Core
+
+Project NEXUS has reached the **Pre-Sphere Core** stage.
+
+This means the software foundation is ready for future hardware integration.
+
+Current Pre-Sphere capabilities include:
+
+- Local AI assistant foundation
+- Memory and context foundation
+- Safe tool execution
+- Git and terminal support
+- Self-test system
+- Voice output
+- Work log support
+- System status dashboard
+- Hardware mock interface
+- Sphere readiness check
+
+Actual physical hardware control is intentionally not enabled yet.
+Hardware integration will be added after additional safety layers are implemented.
+
