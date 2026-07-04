@@ -430,3 +430,318 @@ class PaperIntakeTool(BaseTool):
             "保存先:\n"
             "- Knowledge Core / papers"
         )
+
+
+# PAPER_INTAKE_V2_SAFE_PATCH
+
+def _paper_v2_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _paper_v2_get(self, entry_id: str):
+    entry_id = entry_id.strip()
+    item = self.knowledge.get(entry_id)
+
+    if item and item.get("category") == "papers":
+        return item
+
+    results = self.knowledge.search(entry_id, category="papers", limit=5)
+
+    for item in results:
+        if item.get("category") == "papers":
+            return item
+
+    return None
+
+
+def _paper_v2_parse(content: str) -> dict:
+    fields = {}
+    current = None
+    buf = []
+
+    known = {
+        "Paper Source", "arXiv ID", "Title", "Authors",
+        "Published", "Updated", "Categories", "URL",
+        "PDF URL", "Fetched At",
+    }
+
+    def flush():
+        nonlocal current, buf
+        if current:
+            fields[current] = "\n".join(buf).strip()
+        current = None
+        buf = []
+
+    for line in content.splitlines():
+        if line.startswith("Abstract:"):
+            flush()
+            current = "Abstract"
+            rest = line[len("Abstract:"):].strip()
+            if rest:
+                buf.append(rest)
+            continue
+
+        if line.startswith("NEXUS Note:"):
+            flush()
+            current = "NEXUS Note"
+            continue
+
+        if ":" in line and not line.startswith(" "):
+            key, value = line.split(":", 1)
+            if key in known:
+                flush()
+                current = key
+                buf.append(value.strip())
+                continue
+
+        if current:
+            buf.append(line)
+
+    flush()
+    return fields
+
+
+def _paper_v2_sentences(self, text: str) -> list[str]:
+    text = self._clean(text)
+    result = []
+    buf = ""
+
+    for ch in text:
+        buf += ch
+        if ch in ".!?。！？":
+            sentence = buf.strip()
+            if len(sentence) >= 20:
+                result.append(sentence)
+            buf = ""
+
+    tail = buf.strip()
+    if len(tail) >= 20:
+        result.append(tail)
+
+    return result
+
+
+def _paper_v2_keywords(text: str, limit: int = 20):
+    import re
+
+    words = re.findall(
+        r"[A-Za-z][A-Za-z0-9_+\-.#]{2,}|[一-龥ぁ-んァ-ン]{2,}",
+        text,
+    )
+
+    stop = {
+        "the", "and", "for", "with", "that", "this", "from",
+        "are", "was", "were", "can", "our", "their", "into",
+        "using", "based", "paper", "method", "results",
+        "abstract", "source", "title", "authors", "published",
+        "updated", "categories", "arxiv", "https", "http",
+        "nexus", "note",
+    }
+
+    counts = {}
+
+    for w in words:
+        key = w.strip()
+        if len(key) < 3:
+            continue
+        if key.lower() in stop:
+            continue
+        if re.fullmatch(r"[A-Za-z0-9_+\-.#]+", key):
+            key = key.lower()
+        counts[key] = counts.get(key, 0) + 1
+
+    return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[:limit]
+
+
+def _paper_v2_points(self, abstract: str, limit: int = 6):
+    priority = [
+        "propose", "present", "introduce", "demonstrate",
+        "achieve", "improve", "outperform", "dataset",
+        "model", "framework", "geometry", "estimation",
+        "diffusion", "3d", "image", "learning",
+    ]
+
+    scored = []
+
+    for s in _paper_v2_sentences(self, abstract):
+        low = s.lower()
+        score = 0
+
+        for word in priority:
+            if word in low:
+                score += 3
+
+        if 60 <= len(s) <= 260:
+            score += 4
+
+        scored.append((score, s))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [s for score, s in scored[:limit]]
+
+
+def _paper_v2_report_points(self, entry_id: str) -> str:
+    item = _paper_v2_get(self, entry_id)
+    if not item:
+        return f"論文知識IDが見つかりません: {entry_id}"
+
+    fields = _paper_v2_parse(item.get("content", ""))
+    title = fields.get("Title", "")
+    abstract = fields.get("Abstract", "")
+    points = _paper_v2_points(self, abstract)
+
+    lines = [
+        "## Paper Key Points",
+        "",
+        f"- Knowledge ID: {item.get('id')}",
+        f"- Title: {title}",
+        "",
+        "### 要点",
+    ]
+
+    for p in points or ["Abstractから要点を抽出できませんでした。"]:
+        lines.append(f"- {p}")
+
+    lines.append("")
+    lines.append("Note: Abstractベースの簡易整理です。")
+    return "\n".join(lines)
+
+
+def _paper_v2_report_keywords(self, entry_id: str) -> str:
+    item = _paper_v2_get(self, entry_id)
+    if not item:
+        return f"論文知識IDが見つかりません: {entry_id}"
+
+    fields = _paper_v2_parse(item.get("content", ""))
+    text = fields.get("Title", "") + " " + fields.get("Abstract", "") + " " + fields.get("Categories", "")
+    keywords = _paper_v2_keywords(text)
+
+    lines = [
+        "## Paper Keywords",
+        "",
+        f"- Knowledge ID: {item.get('id')}",
+        f"- Title: {fields.get('Title', '')}",
+        "",
+        "### Keywords",
+    ]
+
+    for word, count in keywords:
+        lines.append(f"- {word} ({count})")
+
+    return "\n".join(lines)
+
+
+def _paper_v2_report_three(self, entry_id: str) -> str:
+    item = _paper_v2_get(self, entry_id)
+    if not item:
+        return f"論文知識IDが見つかりません: {entry_id}"
+
+    fields = _paper_v2_parse(item.get("content", ""))
+    title = fields.get("Title", "")
+    abstract = fields.get("Abstract", "")
+    categories = fields.get("Categories", "")
+
+    keywords = [w for w, c in _paper_v2_keywords(title + " " + abstract, 5)]
+    points = _paper_v2_points(self, abstract, 1)
+
+    return (
+        "## Paper 3-Line Summary\n\n"
+        f"- Knowledge ID: {item.get('id')}\n"
+        f"- Categories: {categories}\n\n"
+        f"1. この論文は「{title}」についての研究です。\n"
+        f"2. 主なキーワードは {', '.join(keywords)} です。\n"
+        f"3. {points[0] if points else 'Abstractから要約文を抽出できませんでした。'}\n\n"
+        "Note: Abstractベースの簡易3行まとめです。"
+    )
+
+
+def _paper_v2_report_safety(self, entry_id: str) -> str:
+    item = _paper_v2_get(self, entry_id)
+    if not item:
+        return f"論文知識IDが見つかりません: {entry_id}"
+
+    fields = _paper_v2_parse(item.get("content", ""))
+    text = item.get("content", "").lower()
+
+    score = 75
+    notes = ["arXiv由来のメタ情報", "Abstract保存あり"]
+    cautions = []
+
+    for word in ["medical", "clinical", "financial", "weapon", "surveillance", "malware"]:
+        if word in text:
+            score -= 8
+            cautions.append(f"慎重確認ワード: {word}")
+
+    if "diffusion" in text or "generation" in text:
+        cautions.append("生成系・拡散系モデルのため、権利・データ由来に注意")
+
+    if "license" not in text:
+        cautions.append("ライセンス情報は未確認")
+
+    score = max(0, min(100, score))
+
+    lines = [
+        "## Paper Safety Review",
+        "",
+        f"- Knowledge ID: {item.get('id')}",
+        f"- Title: {fields.get('Title', '')}",
+        f"- Safety Score: {score}/100",
+        "",
+        "### 良い点",
+    ]
+
+    for n in notes:
+        lines.append(f"- {n}")
+
+    lines.append("")
+    lines.append("### 注意点")
+
+    for c in cautions or ["大きな注意点は検出されませんでした。"]:
+        lines.append(f"- {c}")
+
+    lines.append("")
+    lines.append("Note: Abstract・メタ情報ベースの簡易チェックです。")
+    return "\n".join(lines)
+
+
+_old_paper_can_handle = PaperIntakeTool.can_handle
+_old_paper_execute = PaperIntakeTool.execute
+
+def _paper_v2_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _old_paper_can_handle(self, user_input)
+        or text.startswith("論文要点整理:")
+        or text.startswith("論文要点整理：")
+        or text.startswith("論文キーワード抽出:")
+        or text.startswith("論文キーワード抽出：")
+        or text.startswith("論文3行まとめ:")
+        or text.startswith("論文3行まとめ：")
+        or text.startswith("論文安全評価:")
+        or text.startswith("論文安全評価：")
+    )
+
+
+def _paper_v2_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text.startswith(("論文要点整理:", "論文要点整理：")):
+        return _paper_v2_report_points(self, _paper_v2_sep(text))
+
+    if text.startswith(("論文キーワード抽出:", "論文キーワード抽出：")):
+        return _paper_v2_report_keywords(self, _paper_v2_sep(text))
+
+    if text.startswith(("論文3行まとめ:", "論文3行まとめ：")):
+        return _paper_v2_report_three(self, _paper_v2_sep(text))
+
+    if text.startswith(("論文安全評価:", "論文安全評価：")):
+        return _paper_v2_report_safety(self, _paper_v2_sep(text))
+
+    return _old_paper_execute(self, user_input)
+
+
+PaperIntakeTool.can_handle = _paper_v2_can_handle
+PaperIntakeTool.execute = _paper_v2_execute

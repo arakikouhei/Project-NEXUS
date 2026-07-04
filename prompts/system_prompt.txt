@@ -638,3 +638,19 @@ NEXUSはarXiv APIから安全に論文メタ情報とAbstractを取得し、Know
 - PDF大量保存や全文再配布はしない
 - メタ情報・Abstract・URL・カテゴリを保存する
 - 論文内容の正しさは断定しない
+
+
+# Paper Intake v2
+
+NEXUSは保存済み論文のAbstractをもとに、要点整理・キーワード抽出・3行まとめ・安全評価ができます。
+
+使える例:
+- 論文要点整理: papers-xxxxxxxx
+- 論文キーワード抽出: papers-xxxxxxxx
+- 論文3行まとめ: papers-xxxxxxxx
+- 論文安全評価: papers-xxxxxxxx
+
+方針:
+- v2はAbstractとメタ情報ベースの簡易整理
+- 論文全体の厳密な査読評価ではない
+- 商用利用・引用・実装利用には原文とライセンス確認が必要
