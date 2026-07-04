@@ -29,6 +29,8 @@ class NexusAgent:
             "画像安全確認：",
             "画像分析:",
             "画像分析：",
+            "画像意味分析:",
+            "画像意味分析：",
         )
 
         if stripped_input.startswith(vision_prefixes):
