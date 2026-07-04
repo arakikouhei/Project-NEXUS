@@ -1339,3 +1339,333 @@ def _af_v1_execute(self, user_input: str) -> str:
 
 KnowledgeTool.can_handle = _af_v1_can_handle
 KnowledgeTool.execute = _af_v1_execute
+
+
+# SOURCE_TRUST_V1_SAFE_PATCH
+
+def _st_v1_all_entries(self) -> list[dict]:
+    try:
+        return self.store.list_entries(limit=2000)
+    except TypeError:
+        return self.store.list_entries()
+
+
+def _st_v1_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _st_v1_short(content: str, limit: int = 180) -> str:
+    content = str(content).replace("\n", " ").strip()
+    if len(content) > limit:
+        return content[:limit].rstrip() + "..."
+    return content
+
+
+def _st_v1_score_entry(entry: dict) -> dict:
+    source = str(entry.get("source", "")).lower()
+    category = str(entry.get("category", "")).lower()
+    content = str(entry.get("content", "")).lower()
+    tags = " ".join(entry.get("tags", [])).lower()
+
+    text = f"{source} {category} {content} {tags}"
+
+    score = 50
+    reasons = []
+    cautions = []
+
+    # 高信頼寄り
+    if "official" in text or "公式" in text:
+        score += 20
+        reasons.append("公式/officialらしさ")
+
+    if source in {"arxiv"} or "arxiv" in source:
+        score += 12
+        reasons.append("arXiv由来")
+        cautions.append("arXivは有用だが査読済みとは限らない")
+
+    if "pubmed" in text or "pmc" in text:
+        score += 18
+        reasons.append("研究・論文系データベース")
+
+    if "python docs" in text or "python.org" in text:
+        score += 22
+        reasons.append("Python公式系")
+
+    if "autodesk" in text or "blender manual" in text or "docs.blender.org" in text:
+        score += 20
+        reasons.append("3DCG公式ドキュメント系")
+
+    if "github" in text and "blog" not in text:
+        score += 10
+        reasons.append("開発系ソース")
+
+    # 補助情報扱い
+    if "world_update_v2" in source or "world_update" in text:
+        score -= 12
+        cautions.append("world_update由来。ニュース要約なので補助情報扱い")
+
+    if "google news" in text or "news.google" in text:
+        score -= 15
+        cautions.append("Google News経由。元記事確認が必要")
+
+    if source in {"user", "manual", ""}:
+        score -= 5
+        cautions.append("ユーザー/手動追加知識。根拠確認が必要")
+
+    if category == "world":
+        score -= 8
+        cautions.append("社会情勢系。古くなる可能性が高い")
+
+    if entry.get("archived"):
+        score -= 20
+        cautions.append("アーカイブ済み")
+
+    if "license" not in text and category in {"papers", "3dcg", "development"}:
+        cautions.append("ライセンス情報は未確認")
+
+    score = max(0, min(100, score))
+
+    if score >= 80:
+        label = "high"
+    elif score >= 60:
+        label = "medium"
+    elif score >= 40:
+        label = "low-medium"
+    else:
+        label = "low"
+
+    return {
+        "score": score,
+        "label": label,
+        "reasons": list(dict.fromkeys(reasons)),
+        "cautions": list(dict.fromkeys(cautions)),
+    }
+
+
+def _st_v1_source_list(self) -> str:
+    entries = _st_v1_all_entries(self)
+
+    if not entries:
+        return "## Source Trust List\n\n保存済み知識はまだありません。"
+
+    source_data = {}
+
+    for entry in entries:
+        source = entry.get("source", "unknown")
+        result = _st_v1_score_entry(entry)
+
+        if source not in source_data:
+            source_data[source] = {
+                "count": 0,
+                "scores": [],
+                "labels": {},
+                "reasons": {},
+                "cautions": {},
+            }
+
+        data = source_data[source]
+        data["count"] += 1
+        data["scores"].append(result["score"])
+        data["labels"][result["label"]] = data["labels"].get(result["label"], 0) + 1
+
+        for reason in result["reasons"]:
+            data["reasons"][reason] = data["reasons"].get(reason, 0) + 1
+
+        for caution in result["cautions"]:
+            data["cautions"][caution] = data["cautions"].get(caution, 0) + 1
+
+    lines = [
+        "## Source Trust List",
+        "",
+        f"Sources: {len(source_data)}",
+        "",
+    ]
+
+    ranked = []
+
+    for source, data in source_data.items():
+        avg = round(sum(data["scores"]) / max(len(data["scores"]), 1), 1)
+        ranked.append((avg, source, data))
+
+    ranked.sort(key=lambda x: (-x[0], x[1]))
+
+    for avg, source, data in ranked:
+        lines.append(f"### {source}")
+        lines.append(f"- Entries: {data['count']}")
+        lines.append(f"- Average Trust Score: {avg}/100")
+        lines.append(f"- Labels: {data['labels']}")
+
+        reasons = sorted(data["reasons"].items(), key=lambda x: (-x[1], x[0]))[:5]
+        cautions = sorted(data["cautions"].items(), key=lambda x: (-x[1], x[0]))[:5]
+
+        if reasons:
+            lines.append("- Reasons:")
+            for reason, count in reasons:
+                lines.append(f"  - {reason}: {count}")
+
+        if cautions:
+            lines.append("- Cautions:")
+            for caution, count in cautions:
+                lines.append(f"  - {caution}: {count}")
+
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _st_v1_check_all(self) -> str:
+    entries = _st_v1_all_entries(self)
+
+    if not entries:
+        return "## Source Trust Check\n\n保存済み知識はまだありません。"
+
+    scored = []
+
+    for entry in entries:
+        result = _st_v1_score_entry(entry)
+        scored.append((result["score"], result, entry))
+
+    scored.sort(key=lambda x: x[0])
+
+    low = [x for x in scored if x[0] < 60]
+    high = [x for x in scored if x[0] >= 80]
+
+    lines = [
+        "## Source Trust Check",
+        "",
+        f"Total Entries: {len(entries)}",
+        f"High Trust 80+: {len(high)}",
+        f"Needs Caution <60: {len(low)}",
+        "",
+        "### Needs Caution",
+    ]
+
+    if low:
+        for score, result, entry in low[:12]:
+            lines.append(f"#### {entry.get('id')}")
+            lines.append(f"- Trust: {score}/100 ({result['label']})")
+            lines.append(f"- Category: {entry.get('category')}")
+            lines.append(f"- Source: {entry.get('source')}")
+            lines.append(f"- Cautions: {', '.join(result['cautions']) if result['cautions'] else 'なし'}")
+            lines.append(f"- Preview: {_st_v1_short(entry.get('content', ''))}")
+            lines.append("")
+    else:
+        lines.append("- 注意度が高い知識は見つかりませんでした。")
+
+    lines.append("")
+    lines.append("### High Trust Samples")
+
+    if high:
+        for score, result, entry in sorted(high, key=lambda x: -x[0])[:8]:
+            lines.append(f"- [{score}/100] {entry.get('id')} / {entry.get('source')} / {entry.get('category')}")
+    else:
+        lines.append("- high扱いの知識はまだ少なめです。")
+
+    lines.append("")
+    lines.append("Note: v1はヒューリスティック評価です。最終判断には原文・公式情報確認が必要です。")
+
+    return "\n".join(lines)
+
+
+def _st_v1_confirm(self, query: str) -> str:
+    query = query.strip()
+
+    if not query:
+        return "検索語またはIDがありません。例: 知識信頼度確認: diffusion"
+
+    entries = _st_v1_all_entries(self)
+
+    target = None
+    for entry in entries:
+        if entry.get("id") == query:
+            target = entry
+            break
+
+    if target:
+        targets = [target]
+        title = f"Knowledge Trust / {query}"
+    else:
+        q = query.lower()
+        targets = []
+
+        for entry in entries:
+            text = " ".join([
+                str(entry.get("id", "")),
+                str(entry.get("category", "")),
+                str(entry.get("source", "")),
+                str(entry.get("content", "")),
+                " ".join(entry.get("tags", [])),
+            ]).lower()
+
+            if q in text:
+                targets.append(entry)
+
+        title = f"Knowledge Trust Search / {query}"
+
+    if not targets:
+        return f"## {title}\n\n該当する知識が見つかりませんでした。"
+
+    lines = [
+        f"## {title}",
+        "",
+        f"Matched Entries: {len(targets)}",
+        "",
+    ]
+
+    scored = []
+    for entry in targets:
+        result = _st_v1_score_entry(entry)
+        scored.append((result["score"], result, entry))
+
+    scored.sort(key=lambda x: -x[0])
+
+    for score, result, entry in scored[:12]:
+        lines.append(f"### {entry.get('id')}")
+        lines.append(f"- Trust Score: {score}/100")
+        lines.append(f"- Trust Label: {result['label']}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Reasons: {', '.join(result['reasons']) if result['reasons'] else 'なし'}")
+        lines.append(f"- Cautions: {', '.join(result['cautions']) if result['cautions'] else 'なし'}")
+        lines.append(f"- Preview: {_st_v1_short(entry.get('content', ''))}")
+        lines.append("")
+
+    lines.append("Note: 信頼度は目安です。重要な判断には一次情報・公式情報を確認してください。")
+
+    return "\n".join(lines).rstrip()
+
+
+_st_v1_can_handle_base = KnowledgeTool.can_handle
+_st_v1_execute_base = KnowledgeTool.execute
+
+def _st_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _st_v1_can_handle_base(self, user_input)
+        or text == "情報源信頼度一覧"
+        or text == "情報源信頼度チェック"
+        or text.startswith("知識信頼度確認:")
+        or text.startswith("知識信頼度確認：")
+    )
+
+
+def _st_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text == "情報源信頼度一覧":
+        return _st_v1_source_list(self)
+
+    if text == "情報源信頼度チェック":
+        return _st_v1_check_all(self)
+
+    if text.startswith(("知識信頼度確認:", "知識信頼度確認：")):
+        return _st_v1_confirm(self, _st_v1_sep(text))
+
+    return _st_v1_execute_base(self, user_input)
+
+
+KnowledgeTool.can_handle = _st_v1_can_handle
+KnowledgeTool.execute = _st_v1_execute
