@@ -18,6 +18,7 @@ from nexus.tools.capability import CapabilityTool
 from nexus.tools.transfer import TransferTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
+from nexus.tools.safe_search import SafeSearchTool
 from nexus.tools.app import AppControlTool
 from nexus.tools.math import AdvancedMathTool
 from nexus.tools.calculator import CalculatorTool

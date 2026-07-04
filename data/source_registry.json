@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "description": "Official-priority source registry for Safe Search Tool v2.",
+  "sources": {
+    "東京造形大学": {
+      "aliases": [
+        "東京造形",
+        "東京造形大",
+        "造形大"
+      ],
+      "category": "university",
+      "official_urls": [
+        {
+          "label": "公式サイト",
+          "url": "https://www.zokei.ac.jp/"
+        },
+        {
+          "label": "造形学部",
+          "url": "https://www.zokei.ac.jp/academics/undergrad/"
+        }
+      ],
+      "note": "入試・学費・日程は必ず公式サイトで確認する。"
+    },
+    "多摩美術大学": {
+      "aliases": [
+        "多摩美",
+        "タマビ"
+      ],
+      "category": "university",
+      "official_urls": [
+        {
+          "label": "公式サイト",
+          "url": "https://www.tamabi.ac.jp/"
+        },
+        {
+          "label": "学部・大学院",
+          "url": "https://www.tamabi.ac.jp/academic-programs/"
+        }
+      ],
+      "note": "入試・学費・日程は必ず公式サイトで確認する。"
+    },
+    "武蔵野美術大学": {
+      "aliases": [
+        "武蔵美",
+        "ムサビ"
+      ],
+      "category": "university",
+      "official_urls": [
+        {
+          "label": "公式サイト",
+          "url": "https://www.musabi.ac.jp/"
+        },
+        {
+          "label": "学部学科・大学院",
+          "url": "https://www.musabi.ac.jp/course/"
+        }
+      ],
+      "note": "入試・学費・日程は必ず公式サイトで確認する。"
+    },
+    "Autodesk Maya": {
+      "aliases": [
+        "Maya",
+        "maya",
+        "MAYA",
+        "マヤ"
+      ],
+      "category": "software",
+      "official_urls": [
+        {
+          "label": "Autodesk Maya 公式ページ",
+          "url": "https://www.autodesk.com/products/maya/overview"
+        }
+      ],
+      "note": "3DCG制作ソフト。文脈により文明・神話など別意味の可能性もある。"
+    }
+  }
+}
