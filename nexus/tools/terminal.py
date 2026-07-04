@@ -3,6 +3,7 @@ Project NEXUS
 Safe Terminal Tool
 """
 
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -18,14 +19,33 @@ class TerminalTool(BaseTool):
     def __init__(self) -> None:
         self.working_directory = Path.cwd()
 
-        self.allowed_exact_commands = {
+        self.dangerous_commands = {
+            "rm",
+            "sudo",
+            "shutdown",
+            "reboot",
+            "chmod",
+            "chown",
+            "kill",
+            "killall",
+            "mv",
+            "cp",
+        }
+
+        self.dangerous_symbols = {
+            ">",
+            ">>",
+            "|",
+            "&&",
+            ";",
+        }
+
+        self.terminal_commands = {
             "pwd",
             "ls",
-            "ls -la",
-            "git status",
-            "git log --oneline -5",
-            "python3 --version",
-            "pip3 --version",
+            "git",
+            "python3",
+            "pip3",
         }
 
     def can_handle(self, user_input: str) -> bool:
@@ -39,38 +59,14 @@ class TerminalTool(BaseTool):
         ):
             return True
 
-        if command in self.allowed_exact_commands:
-            return True
-
-        parts = command.split()
+        parts = self._split_command(command)
 
         if not parts:
             return False
 
         first_word = parts[0]
 
-        terminal_commands = {
-            "pwd",
-            "ls",
-            "git",
-            "python3",
-            "pip3",
-        }
-
-        dangerous_commands = {
-            "rm",
-            "sudo",
-            "shutdown",
-            "reboot",
-            "chmod",
-            "chown",
-            "kill",
-            "killall",
-            "mv",
-            "cp",
-        }
-
-        return first_word in terminal_commands or first_word in dangerous_commands
+        return first_word in self.terminal_commands or first_word in self.dangerous_commands
 
     def execute(self, user_input: str) -> str:
         command = self._normalize_command(user_input)
@@ -81,12 +77,19 @@ class TerminalTool(BaseTool):
         if self._is_blocked(command):
             return f"安全のため、このコマンドは実行できません: {command}"
 
-        if command not in self.allowed_exact_commands:
-            return f"許可されていないコマンドです: {command}"
+        parts = self._split_command(command)
+
+        if not parts:
+            return "コマンドを解析できませんでした。"
+
+        is_valid, message = self._validate_command(parts)
+
+        if not is_valid:
+            return message
 
         try:
             result = subprocess.run(
-                command.split(),
+                parts,
                 cwd=self.working_directory,
                 capture_output=True,
                 text=True,
@@ -98,10 +101,10 @@ class TerminalTool(BaseTool):
             error = result.stderr.strip()
 
             if output:
-                return output
+                return self._limit_output(output)
 
             if error:
-                return error
+                return self._limit_output(error)
 
             return "コマンドは実行されましたが、出力はありません。"
 
@@ -127,38 +130,114 @@ class TerminalTool(BaseTool):
 
         return command
 
+    def _split_command(self, command: str) -> list[str]:
+        try:
+            return shlex.split(command)
+        except ValueError:
+            return []
+
     def _is_blocked(self, command: str) -> bool:
-        parts = command.split()
-
-        dangerous_commands = {
-            "rm",
-            "sudo",
-            "shutdown",
-            "reboot",
-            "chmod",
-            "chown",
-            "kill",
-            "killall",
-            "mv",
-            "cp",
-        }
-
-        dangerous_symbols = {
-            ">",
-            ">>",
-            "|",
-            "&&",
-            ";",
-        }
+        parts = self._split_command(command)
 
         if not parts:
             return False
 
-        if parts[0] in dangerous_commands:
-            return True
-
-        for symbol in dangerous_symbols:
+        for symbol in self.dangerous_symbols:
             if symbol in command:
                 return True
 
+        for part in parts:
+            if part in self.dangerous_commands:
+                return True
+
         return False
+
+    def _validate_command(self, parts: list[str]) -> tuple[bool, str]:
+        command = parts[0]
+
+        if command == "pwd":
+            if len(parts) == 1:
+                return True, ""
+            return False, "pwd に引数は使えません。"
+
+        if command == "ls":
+            return self._validate_ls(parts)
+
+        if command == "git":
+            return self._validate_git(parts)
+
+        if command == "python3":
+            if parts == ["python3", "--version"]:
+                return True, ""
+            return False, f"許可されていないコマンドです: {' '.join(parts)}"
+
+        if command == "pip3":
+            if parts == ["pip3", "--version"]:
+                return True, ""
+            return False, f"許可されていないコマンドです: {' '.join(parts)}"
+
+        return False, f"許可されていないコマンドです: {' '.join(parts)}"
+
+    def _validate_ls(self, parts: list[str]) -> tuple[bool, str]:
+        if len(parts) == 1:
+            return True, ""
+
+        if len(parts) == 2:
+            if parts[1] == "-la":
+                return True, ""
+
+            if self._is_safe_path(parts[1]):
+                return True, ""
+
+        if len(parts) == 3:
+            if parts[1] == "-la" and self._is_safe_path(parts[2]):
+                return True, ""
+
+        return False, f"許可されていないlsコマンドです: {' '.join(parts)}"
+
+    def _validate_git(self, parts: list[str]) -> tuple[bool, str]:
+        allowed_git_commands = [
+            ["git", "status"],
+            ["git", "diff", "--stat"],
+            ["git", "log", "--oneline", "-5"],
+        ]
+
+        if parts in allowed_git_commands:
+            return True, ""
+
+        return False, f"許可されていないgitコマンドです: {' '.join(parts)}"
+
+    def _is_safe_path(self, path_text: str) -> bool:
+        if not path_text:
+            return False
+
+        if path_text.startswith("-"):
+            return False
+
+        path = Path(path_text)
+
+        if path.is_absolute():
+            return False
+
+        if "~" in path.parts:
+            return False
+
+        if ".." in path.parts:
+            return False
+
+        resolved_path = (self.working_directory / path).resolve()
+
+        try:
+            resolved_path.relative_to(self.working_directory.resolve())
+        except ValueError:
+            return False
+
+        return True
+
+    def _limit_output(self, text: str) -> str:
+        max_length = 4000
+
+        if len(text) <= max_length:
+            return text
+
+        return text[:max_length] + "\n\n...出力が長いため省略しました。"
