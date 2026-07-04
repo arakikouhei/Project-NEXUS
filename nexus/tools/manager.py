@@ -19,6 +19,7 @@ from nexus.tools.transfer import TransferTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
+from nexus.tools.vision import VisionTool
 from nexus.tools.app import AppControlTool
 from nexus.tools.math import AdvancedMathTool
 from nexus.tools.calculator import CalculatorTool
@@ -33,6 +34,7 @@ class ToolManager:
     def __init__(self) -> None:
         self.tools: list[BaseTool] = []
 
+        # Core / status tools
         self.register(ClockTool())
         self.register(GitTool())
         self.register(TerminalTool())
@@ -43,12 +45,23 @@ class ToolManager:
         self.register(DashboardTool())
         self.register(WorkLogTool())
         self.register(HardwareTool())
-        self.register(CapabilityTool())
+
+        # Specific command tools must come before broad/help/math tools.
         self.register(TransferTool())
+        self.register(SafeSearchTool())
+        self.register(SafeResearchTool())
         self.register(WebTool())
+        self.register(VisionTool())
         self.register(AppControlTool())
+
+        # Math tools must come before general calculator, but after specific tools.
         self.register(AdvancedMathTool())
         self.register(CalculatorTool())
+
+        # Broad/help tools should come after specific tools.
+        self.register(CapabilityTool())
+
+        # Project/code tools
         self.register(FileSystemTool())
         self.register(ProjectTool())
         self.register(CodeTool())

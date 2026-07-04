@@ -19,6 +19,26 @@ class NexusAgent:
         self.normalizer = InputNormalizer()
 
     def process(self, user_input: str) -> tuple[bool, str | None]:
+        # VISION_ROUTING_BYPASS_V2
+        # 画像系コマンドは InputNormalizer より前に VisionTool へ渡す。
+        stripped_input = user_input.strip()
+        vision_prefixes = (
+            "画像ヘルプ",
+            "vision help",
+            "画像安全確認:",
+            "画像安全確認：",
+            "画像分析:",
+            "画像分析：",
+        )
+
+        if stripped_input.startswith(vision_prefixes):
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         normalized = self.normalizer.normalize(user_input)
 
         result = self.tools.execute(normalized.text)
