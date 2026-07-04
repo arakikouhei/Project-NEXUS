@@ -1669,3 +1669,396 @@ def _st_v1_execute(self, user_input: str) -> str:
 
 KnowledgeTool.can_handle = _st_v1_can_handle
 KnowledgeTool.execute = _st_v1_execute
+
+
+# KNOWLEDGE_ANSWER_V1_SAFE_PATCH
+
+def _ka_v1_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _ka_v1_all_entries(self) -> list[dict]:
+    try:
+        entries = self.store.list_entries(limit=2000)
+    except TypeError:
+        entries = self.store.list_entries()
+
+    # Archive Filter がある場合に合わせて、基本は archived を除外
+    return [e for e in entries if not e.get("archived")]
+
+
+def _ka_v1_score(entry: dict, question: str) -> int:
+    q = question.lower().strip()
+    if not q:
+        return 0
+
+    content = str(entry.get("content", ""))
+    category = str(entry.get("category", ""))
+    source = str(entry.get("source", ""))
+    tags = " ".join(entry.get("tags", []))
+
+    text = f"{content} {category} {source} {tags}".lower()
+
+    score = 0
+
+    for token in q.replace("？", " ").replace("?", " ").split():
+        token = token.strip().lower()
+        if not token:
+            continue
+
+        if token in text:
+            score += 12
+        if token in tags.lower():
+            score += 16
+        if token in category.lower():
+            score += 8
+        if token in source.lower():
+            score += 6
+
+    # よくある日本語質問語は検索ノイズなので軽く無視
+    noise = ["とは", "なに", "何", "ですか", "教えて", "について"]
+    cleaned = q
+    for n in noise:
+        cleaned = cleaned.replace(n.lower(), " ")
+
+    for token in cleaned.split():
+        if token and token in text:
+            score += 10
+
+    return score
+
+
+def _ka_v1_trust(entry: dict) -> dict:
+    # Source Trust v1が入っていれば、その関数を使う
+    try:
+        return _st_v1_score_entry(entry)
+    except Exception:
+        source = str(entry.get("source", "")).lower()
+        category = str(entry.get("category", "")).lower()
+
+        score = 50
+        cautions = []
+
+        if "arxiv" in source:
+            score += 10
+            cautions.append("arXivは査読済みとは限らない")
+        if "world_update" in source or category == "world":
+            score -= 15
+            cautions.append("ニュース系・社会情勢系は古くなる可能性がある")
+
+        label = "high" if score >= 80 else "medium" if score >= 60 else "low-medium" if score >= 40 else "low"
+
+        return {
+            "score": max(0, min(100, score)),
+            "label": label,
+            "reasons": [],
+            "cautions": cautions,
+        }
+
+
+def _ka_v1_short(content: str, limit: int = 260) -> str:
+    content = str(content).replace("\n", " ").strip()
+    if len(content) > limit:
+        return content[:limit].rstrip() + "..."
+    return content
+
+
+def _ka_v1_extract_answer(question: str, entries: list[dict]) -> str:
+    q = question.lower()
+
+    # v1は生成AIに丸投げせず、保存済み知識から抽出的に答える
+    lines = []
+
+    for entry in entries:
+        content = str(entry.get("content", ""))
+        compact = content.replace("\n", " ")
+
+        if "Title:" in content and "Abstract:" in content:
+            title = ""
+            abstract = ""
+
+            for line in content.splitlines():
+                if line.startswith("Title:"):
+                    title = line.split(":", 1)[1].strip()
+                if line.startswith("Abstract:"):
+                    abstract = line.split(":", 1)[1].strip()
+
+            if not abstract:
+                parts = content.split("Abstract:")
+                if len(parts) >= 2:
+                    abstract = parts[1].split("NEXUS Note:")[0].strip().replace("\n", " ")
+
+            if title:
+                lines.append(f"「{title}」に関する保存済み論文情報があります。")
+            if abstract:
+                lines.append(_ka_v1_short(abstract, 360))
+            continue
+
+        lines.append(_ka_v1_short(compact, 320))
+
+    if not lines:
+        return "保存済み知識から答えを作れませんでした。"
+
+    # 重複文を削る
+    unique = []
+    for line in lines:
+        if line and line not in unique:
+            unique.append(line)
+
+    return "\n".join(f"- {line}" for line in unique[:5])
+
+
+def _ka_v1_answer(self, question: str) -> str:
+    question = question.strip()
+
+    if not question:
+        return "質問がありません。例: 知識回答: PointDiTは何の論文？"
+
+    entries = _ka_v1_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        score = _ka_v1_score(entry, question)
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = [entry for score, entry in scored[:5]]
+
+    if not top:
+        return (
+            "## Knowledge Answer\n\n"
+            f"Question: {question}\n\n"
+            "保存済みKnowledge Core内では、根拠になる知識が見つかりませんでした。\n\n"
+            "必要なら先に `知識横断検索:` や `論文検索:` で知識を追加してください。"
+        )
+
+    answer = _ka_v1_extract_answer(question, top)
+
+    lines = [
+        "## Knowledge Answer",
+        "",
+        f"Question: {question}",
+        "",
+        "### Answer",
+        answer,
+        "",
+        "### Evidence",
+    ]
+
+    for score, entry in scored[:5]:
+        trust = _ka_v1_trust(entry)
+
+        lines.append(f"#### {entry.get('id')}")
+        lines.append(f"- Match Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Trust: {trust.get('score')}/100 ({trust.get('label')})")
+
+        cautions = trust.get("cautions", [])
+        if cautions:
+            lines.append(f"- Cautions: {', '.join(cautions)}")
+
+        lines.append(f"- Preview: {_ka_v1_short(entry.get('content', ''), 220)}")
+        lines.append("")
+
+    lines.append("### Note")
+    lines.append("- この回答は保存済みKnowledge Coreを根拠にした抽出的回答です。")
+    lines.append("- 根拠が弱い場合や最新情報は、公式情報・原文確認が必要です。")
+
+    return "\n".join(lines).rstrip()
+
+
+_ka_v1_can_handle_base = KnowledgeTool.can_handle
+_ka_v1_execute_base = KnowledgeTool.execute
+
+def _ka_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _ka_v1_can_handle_base(self, user_input)
+        or text.startswith("知識回答:")
+        or text.startswith("知識回答：")
+    )
+
+
+def _ka_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text.startswith(("知識回答:", "知識回答：")):
+        return _ka_v1_answer(self, _ka_v1_sep(text))
+
+    return _ka_v1_execute_base(self, user_input)
+
+
+KnowledgeTool.can_handle = _ka_v1_can_handle
+KnowledgeTool.execute = _ka_v1_execute
+
+
+# KNOWLEDGE_ANSWER_V1_1_FIX
+
+def _ka_v1_1_terms(question: str) -> list[str]:
+    import re
+
+    q = question.lower()
+    q = q.replace("？", " ").replace("?", " ")
+    q = q.replace("とは", " ")
+    q = q.replace("って何", " ")
+    q = q.replace("なに", " ")
+    q = q.replace("何", " ")
+    q = q.replace("の論文", " ")
+    q = q.replace("ですか", " ")
+    q = q.replace("教えて", " ")
+    q = q.replace("について", " ")
+
+    terms = re.findall(r"[a-zA-Z][a-zA-Z0-9_+\-.#]{1,}|[0-9]+(?:\.[0-9]+)?|[一-龥ぁ-んァ-ン]{2,}", q)
+
+    stop = {
+        "これは", "それは", "知識", "回答", "論文", "概念", "存在",
+        "架空", "ない", "について", "とは", "です", "ます",
+    }
+
+    result = []
+    for term in terms:
+        t = term.strip().lower()
+        if not t or t in stop:
+            continue
+        if t not in result:
+            result.append(t)
+
+    return result
+
+
+def _ka_v1_1_score(entry: dict, question: str) -> int:
+    terms = _ka_v1_1_terms(question)
+
+    if not terms:
+        return 0
+
+    content = str(entry.get("content", ""))
+    category = str(entry.get("category", ""))
+    source = str(entry.get("source", ""))
+    tags = " ".join(entry.get("tags", []))
+
+    text = f"{content} {category} {source} {tags}".lower()
+    tags_low = tags.lower()
+    category_low = category.lower()
+    source_low = source.lower()
+
+    score = 0
+    matched_terms = 0
+
+    for term in terms:
+        if term in text:
+            matched_terms += 1
+            score += 14
+
+        if term in tags_low:
+            score += 18
+
+        if term in category_low:
+            score += 6
+
+        if term in source_low:
+            score += 4
+
+    # 英字キーワードがタイトル・タグに入る場合は強める
+    title_boost_fields = []
+    for line in content.splitlines():
+        if line.startswith("Title:"):
+            title_boost_fields.append(line.lower())
+        if line.startswith("arXiv ID:"):
+            title_boost_fields.append(line.lower())
+
+    title_text = " ".join(title_boost_fields)
+
+    for term in terms:
+        if term in title_text:
+            score += 25
+
+    # 1語も実体語が一致していなければ無効
+    if matched_terms <= 0:
+        return 0
+
+    # world_updateは回答根拠として弱いので、明示一致が弱い場合は落とす
+    if entry.get("source") == "world_update_v2":
+        score -= 12
+
+    return max(0, score)
+
+
+def _ka_v1_1_answer(self, question: str) -> str:
+    question = question.strip()
+
+    if not question:
+        return "質問がありません。例: 知識回答: PointDiTは何の論文？"
+
+    entries = _ka_v1_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        score = _ka_v1_1_score(entry, question)
+        if score >= 18:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = [entry for score, entry in scored[:5]]
+
+    if not top:
+        return (
+            "## Knowledge Answer\n\n"
+            f"Question: {question}\n\n"
+            "保存済みKnowledge Core内では、根拠になる知識が見つかりませんでした。\n\n"
+            "必要なら先に `知識横断検索:` や `論文検索:` で知識を追加してください。"
+        )
+
+    answer = _ka_v1_extract_answer(question, top)
+
+    lines = [
+        "## Knowledge Answer",
+        "",
+        f"Question: {question}",
+        "",
+        "### Answer",
+        answer,
+        "",
+        "### Evidence",
+    ]
+
+    for score, entry in scored[:5]:
+        trust = _ka_v1_trust(entry)
+
+        lines.append(f"#### {entry.get('id')}")
+        lines.append(f"- Match Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Trust: {trust.get('score')}/100 ({trust.get('label')})")
+
+        cautions = trust.get("cautions", [])
+        if cautions:
+            lines.append(f"- Cautions: {', '.join(cautions)}")
+
+        lines.append(f"- Preview: {_ka_v1_short(entry.get('content', ''), 220)}")
+        lines.append("")
+
+    lines.append("### Note")
+    lines.append("- この回答は保存済みKnowledge Coreを根拠にした抽出的回答です。")
+    lines.append("- 根拠が弱い場合や最新情報は、公式情報・原文確認が必要です。")
+
+    return "\n".join(lines).rstrip()
+
+
+_ka_v1_1_execute_base = KnowledgeTool.execute
+
+def _ka_v1_1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text.startswith(("知識回答:", "知識回答：")):
+        return _ka_v1_1_answer(self, _ka_v1_sep(text))
+
+    return _ka_v1_1_execute_base(self, user_input)
+
+
+KnowledgeTool.execute = _ka_v1_1_execute
