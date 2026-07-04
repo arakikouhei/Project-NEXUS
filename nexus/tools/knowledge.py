@@ -1160,3 +1160,182 @@ def _kc_v1_execute(self, user_input: str) -> str:
 
 KnowledgeTool.can_handle = _kc_v1_can_handle
 KnowledgeTool.execute = _kc_v1_execute
+
+
+# ARCHIVE_FILTER_V1_SAFE_PATCH
+
+def _af_v1_settings_path():
+    from pathlib import Path
+    return Path("data/knowledge/search_settings.json")
+
+
+def _af_v1_load_settings() -> dict:
+    import json
+
+    path = _af_v1_settings_path()
+
+    if not path.exists():
+        return {
+            "include_archived": False,
+        }
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return {
+                "include_archived": bool(data.get("include_archived", False)),
+            }
+    except Exception:
+        pass
+
+    return {
+        "include_archived": False,
+    }
+
+
+def _af_v1_save_settings(settings: dict) -> None:
+    import json
+
+    path = _af_v1_settings_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _af_v1_is_cleanup_command(text: str) -> bool:
+    return (
+        text == "知識アーカイブ候補"
+        or text == "知識アーカイブ一覧"
+        or text.startswith("知識アーカイブ:")
+        or text.startswith("知識アーカイブ：")
+        or text.startswith("知識復元:")
+        or text.startswith("知識復元：")
+    )
+
+
+def _af_v1_filter_entries(entries: list[dict]) -> list[dict]:
+    return [entry for entry in entries if not entry.get("archived")]
+
+
+def _af_v1_settings_report() -> str:
+    settings = _af_v1_load_settings()
+    include_archived = settings.get("include_archived", False)
+
+    mode = "アーカイブ込み" if include_archived else "アーカイブ除外"
+
+    return (
+        "## Knowledge Search Settings\n\n"
+        f"- Current Mode: {mode}\n"
+        f"- include_archived: {include_archived}\n\n"
+        "Commands:\n"
+        "- 知識検索アーカイブ含む\n"
+        "- 知識検索アーカイブ除外\n\n"
+        "Note:\n"
+        "- 通常はアーカイブ除外がおすすめです。\n"
+        "- アーカイブ済みを確認したい時だけ「含む」にしてください。"
+    )
+
+
+def _af_v1_include_archived() -> str:
+    settings = _af_v1_load_settings()
+    settings["include_archived"] = True
+    _af_v1_save_settings(settings)
+
+    return (
+        "## Knowledge Search Settings Updated\n\n"
+        "- Mode: アーカイブ込み\n"
+        "- include_archived: true\n\n"
+        "通常検索・横断検索・ダイジェストで archived=true も含めます。"
+    )
+
+
+def _af_v1_exclude_archived() -> str:
+    settings = _af_v1_load_settings()
+    settings["include_archived"] = False
+    _af_v1_save_settings(settings)
+
+    return (
+        "## Knowledge Search Settings Updated\n\n"
+        "- Mode: アーカイブ除外\n"
+        "- include_archived: false\n\n"
+        "通常検索・横断検索・ダイジェストで archived=true を除外します。"
+    )
+
+
+_af_v1_can_handle_base = KnowledgeTool.can_handle
+_af_v1_execute_base = KnowledgeTool.execute
+
+def _af_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+
+    return (
+        _af_v1_can_handle_base(self, user_input)
+        or text == "知識検索設定"
+        or text == "知識検索アーカイブ含む"
+        or text == "知識検索アーカイブ除外"
+    )
+
+
+def _af_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text == "知識検索設定":
+        return _af_v1_settings_report()
+
+    if text == "知識検索アーカイブ含む":
+        return _af_v1_include_archived()
+
+    if text == "知識検索アーカイブ除外":
+        return _af_v1_exclude_archived()
+
+    settings = _af_v1_load_settings()
+
+    # アーカイブ管理コマンドは、必ず全件を見られるようにする。
+    if settings.get("include_archived", False) or _af_v1_is_cleanup_command(text):
+        return _af_v1_execute_base(self, user_input)
+
+    store = self.store
+
+    original_list_entries = getattr(store, "list_entries", None)
+    original_search = getattr(store, "search", None)
+
+    def filtered_list_entries(*args, **kwargs):
+        if original_list_entries is None:
+            return []
+
+        entries = original_list_entries(*args, **kwargs)
+
+        if isinstance(entries, list):
+            return _af_v1_filter_entries(entries)
+
+        return entries
+
+    def filtered_search(*args, **kwargs):
+        if original_search is None:
+            return []
+
+        results = original_search(*args, **kwargs)
+
+        if isinstance(results, list):
+            return _af_v1_filter_entries(results)
+
+        return results
+
+    try:
+        if original_list_entries is not None:
+            store.list_entries = filtered_list_entries
+
+        if original_search is not None:
+            store.search = filtered_search
+
+        return _af_v1_execute_base(self, user_input)
+
+    finally:
+        if original_list_entries is not None:
+            store.list_entries = original_list_entries
+
+        if original_search is not None:
+            store.search = original_search
+
+
+KnowledgeTool.can_handle = _af_v1_can_handle
+KnowledgeTool.execute = _af_v1_execute
