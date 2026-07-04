@@ -10,6 +10,7 @@ from nexus.tools.terminal import TerminalTool
 from nexus.tools.context import ContextTool
 from nexus.tools.system import SystemTool
 from nexus.tools.voice import VoiceTool
+from nexus.tools.test import TestTool
 from nexus.tools.calculator import CalculatorTool
 from nexus.tools.filesystem import FileSystemTool
 from nexus.tools.project import ProjectTool
@@ -28,6 +29,7 @@ class ToolManager:
         self.register(ContextTool())
         self.register(SystemTool())
         self.register(VoiceTool())
+        self.register(TestTool())
         self.register(CalculatorTool())
         self.register(FileSystemTool())
         self.register(ProjectTool())
