@@ -5,6 +5,7 @@ Tool Manager
 
 from nexus.tools.base_tool import BaseTool
 from nexus.tools.clock import ClockTool
+from nexus.tools.git import GitTool
 from nexus.tools.terminal import TerminalTool
 from nexus.tools.calculator import CalculatorTool
 from nexus.tools.filesystem import FileSystemTool
@@ -18,10 +19,8 @@ class ToolManager:
     def __init__(self) -> None:
         self.tools: list[BaseTool] = []
 
-        # TerminalToolはCalculatorToolより先に置く
-        # 理由: "ls nexus/tools" の "/" や "git log -5" の "-5" を
-        # CalculatorToolが誤って拾うのを防ぐため
         self.register(ClockTool())
+        self.register(GitTool())
         self.register(TerminalTool())
         self.register(CalculatorTool())
         self.register(FileSystemTool())
