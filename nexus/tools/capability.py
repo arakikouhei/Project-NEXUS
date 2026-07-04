@@ -13,16 +13,21 @@ class CapabilityTool(BaseTool):
     description = "NEXUSのできることを表示します"
 
     def can_handle(self, user_input: str) -> bool:
-        keywords = {
+        text = user_input.strip()
+
+        # 画像系ヘルプはVisionTool専用
+        if text.startswith(("画像", "vision")):
+            return False
+
+        keywords = [
             "できること",
             "機能一覧",
             "ヘルプ",
-            "help",
-            "何ができる",
             "使い方",
-        }
-        return any(keyword in user_input for keyword in keywords)
+            "何ができる",
+        ]
 
+        return text in keywords
     def execute(self, user_input: str) -> str:
         return (
             "## NEXUS Capabilities\n\n"

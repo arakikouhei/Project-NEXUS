@@ -15,17 +15,30 @@ class FileSystemTool(BaseTool):
     description = "ファイルやフォルダを操作します"
 
     def can_handle(self, user_input: str) -> bool:
+        text = user_input.strip()
+
+        # アプリ系はAppControlTool専用
+        if text.startswith((
+            "アプリ",
+            "Chrome",
+            "Google Chrome",
+            "VS Code",
+            "Visual Studio Code",
+            "Finder",
+            "Maya",
+            "Premiere",
+            "Premiere Pro",
+        )):
+            return False
+
         keywords = [
-            "一覧",
-            "フォルダ",
-            "ディレクトリ",
-            "開いて",
-            "読んで",
-            "見せて",
+            "フォルダ一覧",
+            "README",
+            "main.py",
+            "console.py",
         ]
 
-        return any(word in user_input for word in keywords)
-
+        return any(word in text for word in keywords)
     def execute(self, user_input: str) -> str:
         root = Path(".")
 

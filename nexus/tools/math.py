@@ -45,9 +45,15 @@ class AdvancedMathTool(BaseTool):
         }
 
     def can_handle(self, user_input: str) -> bool:
-        keywords = {
-            "計算:",
-            "計算：",
+        text = user_input.strip()
+
+        # 基本計算はCalculatorTool専用
+        if text.startswith(("計算:", "計算：", "calc:", "calc：")):
+            return False
+
+        advanced_prefixes = (
+            "単位変換:",
+            "単位変換：",
             "方程式:",
             "方程式：",
             "因数分解:",
@@ -60,17 +66,12 @@ class AdvancedMathTool(BaseTool):
             "積分：",
             "平方完成:",
             "平方完成：",
-            "単位変換:",
-            "単位変換：",
-            "高校数学",
-        }
+        )
 
-        if any(keyword in user_input for keyword in keywords):
+        if text.startswith(advanced_prefixes):
             return True
 
-        simple_math_pattern = r"^[0-9\.\+\-\*/\(\)\s\^%]+$"
-        return bool(re.match(simple_math_pattern, user_input.strip()))
-
+        return text in {"数学ヘルプ", "math help"}
     def execute(self, user_input: str) -> str:
         text = user_input.strip()
 

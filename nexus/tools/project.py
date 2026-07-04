@@ -19,15 +19,34 @@ class ProjectTool(BaseTool):
         self.code_index = CodeIndex()
 
     def can_handle(self, user_input: str) -> bool:
+        text = user_input.strip()
+
+        # 検索/調査系はSafeSearchTool/SafeResearchTool専用
+        if text.startswith((
+            "安全検索:",
+            "安全検索：",
+            "公式確認:",
+            "公式確認：",
+            "公式検索:",
+            "公式検索：",
+            "調べて:",
+            "調べて：",
+            "用語確認:",
+            "用語確認：",
+            "wiki検索:",
+            "wiki検索：",
+        )):
+            return False
+
         keywords = [
             "どこ",
             "探して",
-            "検索",
+            "場所",
             "ファイル",
+            "コード",
         ]
 
-        return any(word in user_input for word in keywords)
-
+        return any(word in text for word in keywords)
     def execute(self, user_input: str) -> str:
         keyword = user_input
 
