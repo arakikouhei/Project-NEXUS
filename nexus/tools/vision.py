@@ -11,6 +11,7 @@ from pathlib import Path
 import colorsys
 
 from nexus.tools.base_tool import BaseTool
+from nexus.memory.vision_log import VisionLogStore
 
 
 class VisionTool(BaseTool):
@@ -31,6 +32,7 @@ class VisionTool(BaseTool):
             ".tiff",
         }
         self.max_size_mb = 25
+        self.vision_log = VisionLogStore()
 
     def can_handle(self, user_input: str) -> bool:
         text = user_input.strip()
@@ -62,13 +64,31 @@ class VisionTool(BaseTool):
 
         if text.startswith(("画像分析:", "画像分析：")):
             path = self._extract_path(text)
-            return self._analyze(path)
+            result = self._analyze(path)
+            self._record_analysis(path, "basic", result)
+            return result
 
         if text.startswith(("画像意味分析:", "画像意味分析：")):
             path = self._extract_path(text)
-            return self._semantic_analyze(path)
+            result = self._semantic_analyze(path)
+            self._record_analysis(path, "semantic", result)
+            return result
 
         return "対応していない画像操作です。"
+
+    def _record_analysis(self, path_text: str, analysis_type: str, result: str) -> None:
+        if "分析できません" in result or "失敗しました" in result:
+            return
+
+        try:
+            self.vision_log.record(
+                image_path=path_text,
+                analysis_type=analysis_type,
+                result=result,
+            )
+        except Exception:
+            # ログ保存失敗で画像分析自体を止めない
+            pass
 
     def _extract_path(self, text: str) -> str:
         for separator in [":", "："]:

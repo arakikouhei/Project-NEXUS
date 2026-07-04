@@ -21,6 +21,7 @@ from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
 from nexus.tools.vision import VisionTool
+from nexus.tools.vision_memory import VisionMemoryTool
 from nexus.tools.app import AppControlTool
 from nexus.tools.math import AdvancedMathTool
 from nexus.tools.calculator import CalculatorTool
@@ -54,6 +55,7 @@ class ToolManager:
         self.register(SafeResearchTool())
         self.register(WebTool())
         self.register(VisionTool())
+        self.register(VisionMemoryTool())
         self.register(AppControlTool())
 
         # Math tools must come before general calculator, but after specific tools.
