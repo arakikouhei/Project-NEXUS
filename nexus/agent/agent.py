@@ -209,6 +209,22 @@ class NexusAgent:
             if result is not None:
                 return True, result
 
+        # SYSTEM_HEALTH_ROUTING_BYPASS_V1
+        system_health_commands = (
+            "システム健康診断",
+            "NEXUS状態確認",
+            "機能一覧",
+            "設定一覧",
+        )
+
+        if stripped_input in system_health_commands:
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         # KNOWLEDGE_AUTO_RECALL_V1
         def auto_recall_enabled() -> bool:
             import json

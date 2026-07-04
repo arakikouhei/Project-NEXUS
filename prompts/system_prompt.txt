@@ -826,3 +826,28 @@ NEXUSは知識自動参照ONのときだけ、自然な質問をKnowledge Answer
 - 既存コマンドは邪魔しない
 - 雑談・英語練習・翻訳は奪わない
 - 根拠がある場合だけKnowledge Answerを返す
+
+
+# System Health v1
+
+NEXUSはシステム状態を確認できます。
+
+使える例:
+- システム健康診断
+- NEXUS状態確認
+- 機能一覧
+- 設定一覧
+
+確認内容:
+- Git状態
+- Python文法チェック
+- Knowledge件数
+- Papers件数
+- World Updateログ件数
+- Archive Filter設定
+- Knowledge Auto Recall設定
+- 主要機能の存在確認
+
+方針:
+- 状態確認のみ
+- ファイル削除や自動修復はしない
