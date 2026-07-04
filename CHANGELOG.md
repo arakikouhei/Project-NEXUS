@@ -4,26 +4,71 @@ All notable changes to Project NEXUS will be documented in this file.
 
 ---
 
-## [1.0.0] - 2026-07-02
+## v0.3.0-alpha
 
 ### Added
 
-- Local AI powered by Ollama + Qwen3
-- AI Engine switching
-- Memory Manager
-- Conversation Memory
-- Prompt System
-- JSON persistent memory
-- Modular project architecture
+- NexusAgent foundation
+- Tool Registry
+- BaseTool architecture
+- Clock Tool
+- Calculator Tool
+- FileSystem Tool
+- Project Tool
+- Code Tool
+- Project Scanner
+- Project Index
+- Code Index
+- Python Parser
+- Code Analyzer
+- Code Reader
+- Context Builder foundation
 
 ### Improved
 
-- Better project structure
-- Cleaner AI engine separation
-- Personalized responses using memory
+- Modular architecture
+- Agent-based system design
+- Tool system extensibility
+- Project file search
+- Python code search
+- README documentation
 
 ### Fixed
 
-- Memory persistence
-- Circular import issues
-- AI initialization flow
+- Tool folder placement
+- File import issues
+- `__pycache__` and `.pyc` files appearing in project search
+- Several module path issues during architecture restructuring
+
+---
+
+## v0.2.0
+
+### Added
+
+- Qwen Engine integration via Ollama
+- Memory context passed to Qwen
+- Conversation Memory
+- Prompt System
+- `system_prompt.txt`
+
+### Improved
+
+- AI Engine switching
+- Long-term memory support
+- Personalized Qwen responses
+
+---
+
+## v0.1.0
+
+### Added
+
+- Project foundation
+- Core System
+- Console Interface
+- Logger
+- Settings
+- Basic AI Engine
+- Memory Manager
+- JSON persistent memory

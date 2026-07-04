@@ -1,111 +1,46 @@
-# Project NEXUS
-
-Project NEXUS is a personal AI assistant platform built from scratch in Python.
-
-The goal of this project is to create a long-term AI system capable of memory, conversation, multiple AI engines, and eventually voice, vision, and robotics.
-
----
-
 # Features
 
-- ✅ Local AI powered by Ollama + Qwen
-- ✅ Memory System
-- ✅ Conversation Memory
+## AI
+- ✅ Local AI (Ollama + Qwen)
 - ✅ Prompt System
-- ✅ AI Engine Switching
-- ✅ JSON Persistent Memory
+- ✅ NexusAgent
+
+## Memory
+- ✅ Persistent Memory
+- ✅ Conversation Memory
+
+## Tool System
+- ✅ Tool Registry
+- ✅ Clock Tool
+- ✅ Calculator Tool
+- ✅ File System Tool
+- ✅ Project Tool
+- ✅ Code Tool
+
+## Development Tools
+- ✅ Project Scanner
+- ✅ Project Index
+- ✅ Code Index
+- ✅ Code Reader
+
+## Context
+- ✅ Context Builder (Foundation)
+
+## Architecture
 - ✅ Modular Architecture
+- ✅ Agent-based Design
+- ✅ Extensible Tool System
+# Current Status
 
----
+Project NEXUS is currently in **v0.3.0-alpha**.
 
-# Architecture
+The foundation of the platform has been completed, including:
 
-```
-User
- │
- ▼
-Console
- │
- ▼
-AIManager
- ├── MemoryManager
- ├── ConversationMemory
- └── QwenEngine
-        │
-        ▼
-     Ollama
-        │
-        ▼
-      Qwen3
-```
-
----
-
-# Project Structure
-
-```
-Project-NEXUS
-├── config/
-├── data/
-├── docs/
-├── logs/
-├── nexus/
-│   ├── ai/
-│   ├── core/
-│   └── memory/
-├── prompts/
-├── tests/
-├── console.py
-├── main.py
-└── README.md
-```
-
----
-
-# Requirements
-
-- Python 3.13+
-- Ollama
-- Qwen3
-- requests
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# Run
-
-```bash
-python3 main.py
-```
-
----
-
-# Roadmap
-
-## Version 1.x
-
-- Prompt System
-- Conversation Memory
-- Better Error Handling
-- Documentation
-
-## Version 2.x
-
-- Gemini Integration
-- AI Router
-- Web Search
+- AI Engine
+- Agent Architecture
+- Memory System
 - Tool System
-- Voice Input / Output
-- Camera Support
-- Sphere AI Hardware
+- Code Analysis
+- Project Index
 
----
-
-# License
-
-MIT License (planned)
+The next milestone is **v0.4.0**, focusing on development tools such as Terminal, Git, and Web integration.

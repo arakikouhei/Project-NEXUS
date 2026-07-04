@@ -25,3 +25,13 @@ class NexusAgent:
             return True, result
 
         return False, None
+    def plan(self, user_input: str) -> list[str]:
+        """Create a simple execution plan."""
+
+        plan = []
+
+        if "解析" in user_input and ".py" not in user_input:
+            plan.append("project")
+            plan.append("code")
+
+        return plan

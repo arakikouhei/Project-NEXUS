@@ -12,7 +12,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     PROJECT_NAME: str = "Project NEXUS"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.3.0-alpha"
     AI_NAME: str = "NEXUS"
     LANGUAGE: str = "ja-JP"
     DEBUG: bool = True
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     PROJECT_NAME: str = "Project NEXUS"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.3.0-alpha"
     AI_NAME: str = "NEXUS"
     LANGUAGE: str = "ja-JP"
     DEBUG: bool = True
