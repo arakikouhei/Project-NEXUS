@@ -125,6 +125,74 @@ class NexusAgent:
 
             return False, None
 
+        # KNOWLEDGE_ANSWER_POLISH_V1
+        def looks_like_knowledge_question(value: str) -> bool:
+            stripped = value.strip()
+
+            if not stripped:
+                return False
+
+            # 既存の明示コマンドは邪魔しない
+            command_prefixes = (
+                "知識",
+                "論文",
+                "画像",
+                "更新",
+                "情報源",
+                "安全検索",
+                "調べて",
+                "web",
+                "url",
+                "git",
+                "コミット",
+                "テスト",
+                "計算",
+                "単位変換",
+                "アプリ",
+                "ダッシュボード",
+                "できること",
+                "exit",
+                "quit",
+                "終了",
+            )
+
+            if stripped.startswith(command_prefixes):
+                return False
+
+            question_markers = (
+                "とは",
+                "って何",
+                "ってなに",
+                "は何",
+                "はなに",
+                "について教えて",
+                "根拠つきで",
+                "根拠付きで",
+            )
+
+            known_terms = (
+                "PointDiT",
+                "diffusion",
+                "Diffusion",
+                "Maya",
+                "UV",
+                "arXiv",
+                "geometry",
+                "3DCG",
+            )
+
+            return (
+                any(marker in stripped for marker in question_markers)
+                and any(term in stripped for term in known_terms)
+            )
+
+        if looks_like_knowledge_question(stripped_input):
+            knowledge_query = f"知識回答: {stripped_input}"
+            result = self.tools.execute(knowledge_query)
+
+            if result is not None:
+                return True, result
+
         # PAPER_INTAKE_ROUTING_BYPASS_V1
         paper_prefixes = (
             "論文ヘルプ",
