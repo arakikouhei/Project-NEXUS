@@ -215,6 +215,10 @@ class NexusAgent:
             "NEXUS状態確認",
             "機能一覧",
             "設定一覧",
+            "NEXUSバックアップ",
+            "知識バックアップ",
+            "知識エクスポート",
+            "バックアップ一覧",
         )
 
         if stripped_input in system_health_commands:

@@ -17,6 +17,7 @@ from nexus.tools.hardware import HardwareTool
 from nexus.tools.capability import CapabilityTool
 from nexus.tools.transfer import TransferTool
 from nexus.tools.diagnostics import ToolDiagnosticsTool
+from nexus.tools.backup_export import BackupExportTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
@@ -54,6 +55,7 @@ class ToolManager:
 
         # Specific command tools must come before broad/help/math tools.
         self.register(ToolDiagnosticsTool())
+        self.register(BackupExportTool())
         self.register(TransferTool())
         self.register(SafeSearchTool())
         self.register(SafeResearchTool())
