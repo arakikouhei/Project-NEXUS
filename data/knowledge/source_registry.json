@@ -1,0 +1,112 @@
+[
+  {
+    "id": "source-3dcg-898c68dd",
+    "category": "3dcg",
+    "name": "SideFX Houdini",
+    "url": "https://www.sidefx.com/docs/houdini/",
+    "note": "Houdini公式ドキュメント",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:31:35",
+    "updated_at": "2026-07-04T20:31:35",
+    "status": "active"
+  },
+  {
+    "id": "source-papers-arxiv",
+    "category": "papers",
+    "name": "arXiv",
+    "url": "https://arxiv.org/",
+    "note": "論文・プレプリント。CS/AI/数学/物理などの調査入口。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-papers-pubmed",
+    "category": "papers",
+    "name": "PubMed",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/",
+    "note": "医学・生命科学系の論文検索入口。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-papers-pmc",
+    "category": "papers",
+    "name": "PubMed Central",
+    "url": "https://pmc.ncbi.nlm.nih.gov/",
+    "note": "無料全文が読める生命科学系論文の入口。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-papers-semantic-scholar",
+    "category": "papers",
+    "name": "Semantic Scholar",
+    "url": "https://www.semanticscholar.org/",
+    "note": "論文・著者・引用関係の調査入口。",
+    "trust_level": "medium",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-programming-python-docs",
+    "category": "programming",
+    "name": "Python Docs",
+    "url": "https://docs.python.org/3/",
+    "note": "Python公式ドキュメント。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-programming-git-docs",
+    "category": "programming",
+    "name": "Git Documentation",
+    "url": "https://git-scm.com/doc",
+    "note": "Git公式ドキュメント。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-3dcg-autodesk-maya-help",
+    "category": "3dcg",
+    "name": "Autodesk Maya Help",
+    "url": "https://help.autodesk.com/view/MAYAUL/2026/ENU/",
+    "note": "Autodesk Maya公式ヘルプ。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-3dcg-blender-manual",
+    "category": "3dcg",
+    "name": "Blender Manual",
+    "url": "https://docs.blender.org/manual/en/latest/",
+    "note": "Blender公式マニュアル。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  },
+  {
+    "id": "source-development-owasp",
+    "category": "development",
+    "name": "OWASP",
+    "url": "https://owasp.org/",
+    "note": "Web/アプリケーションセキュリティの代表的な情報源。",
+    "trust_level": "high",
+    "created_at": "2026-07-04T20:32:10",
+    "updated_at": "2026-07-04T20:32:10",
+    "status": "active"
+  }
+]

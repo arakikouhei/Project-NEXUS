@@ -64,6 +64,28 @@ class NexusAgent:
 
             return False, None
 
+        # SOURCE_REGISTRY_ROUTING_BYPASS_V1
+        # 情報源系コマンドはInputNormalizerより前に専用ツールへ渡す。
+        source_prefixes = (
+            "情報源ヘルプ",
+            "情報源カテゴリ",
+            "情報源一覧",
+            "情報源追加:",
+            "情報源追加：",
+            "情報源検索:",
+            "情報源検索：",
+            "情報源詳細:",
+            "情報源詳細：",
+        )
+
+        if stripped_input.startswith(source_prefixes):
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         normalized = self.normalizer.normalize(user_input)
 
         result = self.tools.execute(normalized.text)
