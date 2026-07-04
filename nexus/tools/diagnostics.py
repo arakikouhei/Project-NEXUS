@@ -505,3 +505,187 @@ def _sh_v1_execute(self, user_input: str) -> str:
 
 ToolDiagnosticsTool.can_handle = _sh_v1_can_handle
 ToolDiagnosticsTool.execute = _sh_v1_execute
+
+# SYSTEM_HEALTH_V2_RECOMMENDED_FIXES_PATCH
+
+def _system_health_v2_read_json_safe(path_text, default):
+    from pathlib import Path
+    import json
+
+    path = Path(path_text)
+
+    if not path.exists():
+        return default
+
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _system_health_v2_recommended_fixes(health_text: str) -> str:
+    fixes = []
+
+    lower = health_text.lower()
+
+    # Git状態
+    if "git clean: false" in lower or "working tree clean: false" in lower:
+        fixes.append("Gitがcleanではありません → `git status` で未保存の変更を確認してください。")
+
+    # Python文法エラー
+    if "python compile errors: 0" not in lower and "compile errors: 0" not in lower:
+        if "compile error" in lower or "compile errors" in lower:
+            fixes.append("Python compile errorがあります → 表示されたファイルを修正してください。")
+
+    # 機能検出
+    if "features detected: 12/12" not in lower:
+        if "features detected" in lower:
+            fixes.append("検出できない機能があります → 最近追加したツール登録やimportを確認してください。")
+
+    # Archive Filter
+    search_settings = _system_health_v2_read_json_safe(
+        "data/knowledge/search_settings.json",
+        {},
+    )
+
+    if isinstance(search_settings, dict) and search_settings.get("include_archived") is True:
+        fixes.append("Archive Filterがアーカイブ含む状態です → 通常運用では `知識検索アーカイブ除外` に戻すのがおすすめです。")
+
+    # Auto Recall
+    auto_recall = _system_health_v2_read_json_safe(
+        "data/knowledge/auto_recall_settings.json",
+        {},
+    )
+
+    if isinstance(auto_recall, dict) and auto_recall.get("enabled") is True:
+        fixes.append("Knowledge Auto RecallがONです → 必要な時だけONにし、通常は `知識自動参照OFF` が安全です。")
+
+    # バックアップ存在
+    from pathlib import Path
+
+    if not Path("backups").exists():
+        fixes.append("backups/ が見つかりません → 大きな改造前に `NEXUSバックアップ` を実行してください。")
+
+    if not Path("exports").exists():
+        fixes.append("exports/ が見つかりません → 軽い保険として `知識エクスポート` を実行してください。")
+
+    if not fixes:
+        fixes.append("問題なし。通常運用OK。大きな改造前だけ `知識エクスポート` または `NEXUSバックアップ` を実行してください。")
+
+    lines = [
+        "## Recommended Fixes",
+        "",
+    ]
+
+    lines.extend(f"- {fix}" for fix in fixes)
+
+    return "\n".join(lines)
+
+
+if not hasattr(ToolDiagnosticsTool, "_system_health_v2_original_execute"):
+    ToolDiagnosticsTool._system_health_v2_original_execute = ToolDiagnosticsTool.execute
+
+    def _system_health_v2_execute(self, user_input: str) -> str:
+        result = self._system_health_v2_original_execute(user_input)
+
+        text = user_input.strip()
+
+        if text in {"システム健康診断", "NEXUS状態確認"}:
+            if "## Recommended Fixes" not in result:
+                result = result.rstrip() + "\n\n" + _system_health_v2_recommended_fixes(result)
+
+        return result
+
+    ToolDiagnosticsTool.execute = _system_health_v2_execute
+
+# SYSTEM_HEALTH_V2_RECOMMENDED_FIXES_PATCH
+
+def _system_health_v2_read_json_safe(path_text, default):
+    from pathlib import Path
+    import json
+
+    path = Path(path_text)
+
+    if not path.exists():
+        return default
+
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _system_health_v2_recommended_fixes(health_text: str) -> str:
+    fixes = []
+
+    lower = health_text.lower()
+
+    # Git状態
+    if "git clean: false" in lower or "working tree clean: false" in lower:
+        fixes.append("Gitがcleanではありません → `git status` で未保存の変更を確認してください。")
+
+    # Python文法エラー
+    if "python compile errors: 0" not in lower and "compile errors: 0" not in lower:
+        if "compile error" in lower or "compile errors" in lower:
+            fixes.append("Python compile errorがあります → 表示されたファイルを修正してください。")
+
+    # 機能検出
+    if "features detected: 12/12" not in lower:
+        if "features detected" in lower:
+            fixes.append("検出できない機能があります → 最近追加したツール登録やimportを確認してください。")
+
+    # Archive Filter
+    search_settings = _system_health_v2_read_json_safe(
+        "data/knowledge/search_settings.json",
+        {},
+    )
+
+    if isinstance(search_settings, dict) and search_settings.get("include_archived") is True:
+        fixes.append("Archive Filterがアーカイブ含む状態です → 通常運用では `知識検索アーカイブ除外` に戻すのがおすすめです。")
+
+    # Auto Recall
+    auto_recall = _system_health_v2_read_json_safe(
+        "data/knowledge/auto_recall_settings.json",
+        {},
+    )
+
+    if isinstance(auto_recall, dict) and auto_recall.get("enabled") is True:
+        fixes.append("Knowledge Auto RecallがONです → 必要な時だけONにし、通常は `知識自動参照OFF` が安全です。")
+
+    # バックアップ存在
+    from pathlib import Path
+
+    if not Path("backups").exists():
+        fixes.append("backups/ が見つかりません → 大きな改造前に `NEXUSバックアップ` を実行してください。")
+
+    if not Path("exports").exists():
+        fixes.append("exports/ が見つかりません → 軽い保険として `知識エクスポート` を実行してください。")
+
+    if not fixes:
+        fixes.append("問題なし。通常運用OK。大きな改造前だけ `知識エクスポート` または `NEXUSバックアップ` を実行してください。")
+
+    lines = [
+        "## Recommended Fixes",
+        "",
+    ]
+
+    lines.extend(f"- {fix}" for fix in fixes)
+
+    return "\n".join(lines)
+
+
+if not hasattr(ToolDiagnosticsTool, "_system_health_v2_original_execute"):
+    ToolDiagnosticsTool._system_health_v2_original_execute = ToolDiagnosticsTool.execute
+
+    def _system_health_v2_execute(self, user_input: str) -> str:
+        result = self._system_health_v2_original_execute(user_input)
+
+        text = user_input.strip()
+
+        if text in {"システム健康診断", "NEXUS状態確認"}:
+            if "## Recommended Fixes" not in result:
+                result = result.rstrip() + "\n\n" + _system_health_v2_recommended_fixes(result)
+
+        return result
+
+    ToolDiagnosticsTool.execute = _system_health_v2_execute
