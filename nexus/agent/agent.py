@@ -41,6 +41,29 @@ class NexusAgent:
 
             return False, None
 
+        # KNOWLEDGE_ROUTING_BYPASS_V1
+        # 知識系コマンドは InputNormalizer により「ヘルプ」へ誤補正される可能性があるため、
+        # 正規化前にKnowledgeToolへ渡す。
+        knowledge_prefixes = (
+            "知識ヘルプ",
+            "知識カテゴリ",
+            "知識一覧",
+            "知識追加:",
+            "知識追加：",
+            "知識検索:",
+            "知識検索：",
+            "知識詳細:",
+            "知識詳細：",
+        )
+
+        if stripped_input.startswith(knowledge_prefixes):
+            result = self.tools.execute(stripped_input)
+
+            if result is not None:
+                return True, result
+
+            return False, None
+
         normalized = self.normalizer.normalize(user_input)
 
         result = self.tools.execute(normalized.text)
