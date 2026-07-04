@@ -15,6 +15,7 @@ from nexus.tools.dashboard import DashboardTool
 from nexus.tools.worklog import WorkLogTool
 from nexus.tools.hardware import HardwareTool
 from nexus.tools.capability import CapabilityTool
+from nexus.tools.transfer import TransferTool
 from nexus.tools.calculator import CalculatorTool
 from nexus.tools.filesystem import FileSystemTool
 from nexus.tools.project import ProjectTool
@@ -38,6 +39,7 @@ class ToolManager:
         self.register(WorkLogTool())
         self.register(HardwareTool())
         self.register(CapabilityTool())
+        self.register(TransferTool())
         self.register(CalculatorTool())
         self.register(FileSystemTool())
         self.register(ProjectTool())

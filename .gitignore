@@ -18,3 +18,4 @@ backups/
 .venv/
 venv/
 data/worklog.json
+exports/
