@@ -204,3 +204,351 @@ class KnowledgeTool(BaseTool):
             "保存先:\n"
             "- data/knowledge/knowledge.json"
         )
+
+
+# KNOWLEDGE_SEARCH_V2_SAFE_PATCH
+
+def _ks_v2_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _ks_v2_all_entries(self) -> list[dict]:
+    try:
+        return self.store.list_entries(limit=1000)
+    except TypeError:
+        return self.store.list_entries()
+
+
+def _ks_v2_score(entry: dict, query: str) -> int:
+    q = query.lower().strip()
+    if not q:
+        return 0
+
+    content = str(entry.get("content", ""))
+    source = str(entry.get("source", ""))
+    category = str(entry.get("category", ""))
+    tags = " ".join(entry.get("tags", []))
+
+    text = f"{content} {source} {category} {tags}"
+    low = text.lower()
+
+    score = 0
+
+    for token in q.split():
+        if not token:
+            continue
+
+        token_low = token.lower()
+
+        if token_low in low:
+            score += 10
+
+        if token_low in category.lower():
+            score += 8
+
+        if token_low in source.lower():
+            score += 6
+
+        if token_low in tags.lower():
+            score += 12
+
+    if q in low:
+        score += 20
+
+    if q in tags.lower():
+        score += 20
+
+    if q in category.lower():
+        score += 10
+
+    return score
+
+
+def _ks_v2_cross_search(self, query: str) -> str:
+    query = query.strip()
+
+    if not query:
+        return "検索語がありません。例: 知識横断検索: diffusion"
+
+    entries = _ks_v2_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        score = _ks_v2_score(entry, query)
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    if not scored:
+        return f"## Knowledge Cross Search\n\nQuery: {query}\n\n該当する知識が見つかりませんでした。"
+
+    lines = [
+        "## Knowledge Cross Search",
+        "",
+        f"Query: {query}",
+        "",
+    ]
+
+    for score, entry in scored[:12]:
+        content = str(entry.get("content", ""))
+        preview = content.replace("\n", " ")
+
+        if len(preview) > 260:
+            preview = preview[:260].rstrip() + "..."
+
+        lines.append(f"### {entry.get('id')}")
+        lines.append(f"- Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Tags: {', '.join(entry.get('tags', []))}")
+        lines.append(f"- Preview: {preview}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _ks_v2_summary(self, query: str) -> str:
+    query = query.strip()
+
+    if not query:
+        return "検索語がありません。例: 知識まとめ: diffusion"
+
+    entries = _ks_v2_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        score = _ks_v2_score(entry, query)
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = scored[:8]
+
+    if not top:
+        return f"## Knowledge Summary\n\nQuery: {query}\n\nまとめられる知識が見つかりませんでした。"
+
+    by_category = {}
+    sources = {}
+    keywords = {}
+
+    for score, entry in top:
+        category = entry.get("category", "unknown")
+        source = entry.get("source", "unknown")
+        by_category[category] = by_category.get(category, 0) + 1
+        sources[source] = sources.get(source, 0) + 1
+
+        for tag in entry.get("tags", []):
+            keywords[tag] = keywords.get(tag, 0) + 1
+
+    lines = [
+        "## Knowledge Summary",
+        "",
+        f"Query: {query}",
+        f"Matched Entries: {len(scored)}",
+        "",
+        "### Categories",
+    ]
+
+    for category, count in sorted(by_category.items(), key=lambda x: -x[1]):
+        lines.append(f"- {category}: {count}")
+
+    lines.append("")
+    lines.append("### Sources")
+
+    for source, count in sorted(sources.items(), key=lambda x: -x[1]):
+        lines.append(f"- {source}: {count}")
+
+    lines.append("")
+    lines.append("### Top Related Tags")
+
+    top_tags = sorted(keywords.items(), key=lambda x: (-x[1], x[0]))[:12]
+
+    if top_tags:
+        for tag, count in top_tags:
+            lines.append(f"- {tag}: {count}")
+    else:
+        lines.append("- タグは少なめです。")
+
+    lines.append("")
+    lines.append("### Top Entries")
+
+    for score, entry in top[:5]:
+        content = str(entry.get("content", "")).replace("\n", " ")
+        if len(content) > 180:
+            content = content[:180].rstrip() + "..."
+
+        lines.append(f"- [{entry.get('id')}] {entry.get('category')} / {entry.get('source')} / score={score}")
+        lines.append(f"  {content}")
+
+    lines.append("")
+    lines.append("Note: これは保存済みKnowledge Core内の簡易まとめです。")
+
+    return "\n".join(lines)
+
+
+def _ks_v2_related(self, entry_id: str) -> str:
+    entry_id = entry_id.strip()
+
+    if not entry_id:
+        return "IDがありません。例: 知識関連検索: papers-fafab9fc"
+
+    target = self.store.get(entry_id)
+
+    if not target:
+        # IDではなく検索語として扱う
+        return _ks_v2_cross_search(self, entry_id)
+
+    target_tags = set(target.get("tags", []))
+    target_category = target.get("category", "")
+    target_content = str(target.get("content", ""))
+    target_words = set(target_content.lower().split()[:80])
+
+    entries = _ks_v2_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        if entry.get("id") == target.get("id"):
+            continue
+
+        score = 0
+
+        tags = set(entry.get("tags", []))
+        score += len(target_tags & tags) * 12
+
+        if entry.get("category") == target_category:
+            score += 8
+
+        content_words = set(str(entry.get("content", "")).lower().split()[:120])
+        score += min(len(target_words & content_words), 20)
+
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    lines = [
+        "## Related Knowledge",
+        "",
+        f"Target: {target.get('id')}",
+        f"Category: {target.get('category')}",
+        f"Source: {target.get('source')}",
+        "",
+    ]
+
+    if not scored:
+        lines.append("関連知識はまだ見つかりませんでした。")
+        return "\n".join(lines)
+
+    for score, entry in scored[:10]:
+        preview = str(entry.get("content", "")).replace("\n", " ")
+        if len(preview) > 220:
+            preview = preview[:220].rstrip() + "..."
+
+        lines.append(f"### {entry.get('id')}")
+        lines.append(f"- Related Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Tags: {', '.join(entry.get('tags', []))}")
+        lines.append(f"- Preview: {preview}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _ks_v2_source_check(self, query: str) -> str:
+    query = query.strip()
+
+    if not query:
+        return "検索語がありません。例: 知識ソース確認: diffusion"
+
+    entries = _ks_v2_all_entries(self)
+    scored = []
+
+    for entry in entries:
+        score = _ks_v2_score(entry, query)
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    if not scored:
+        return f"## Knowledge Source Check\n\nQuery: {query}\n\n該当する知識が見つかりませんでした。"
+
+    source_counts = {}
+    category_counts = {}
+
+    for score, entry in scored:
+        source = entry.get("source", "unknown")
+        category = entry.get("category", "unknown")
+        source_counts[source] = source_counts.get(source, 0) + 1
+        category_counts[category] = category_counts.get(category, 0) + 1
+
+    lines = [
+        "## Knowledge Source Check",
+        "",
+        f"Query: {query}",
+        f"Matched Entries: {len(scored)}",
+        "",
+        "### Sources",
+    ]
+
+    for source, count in sorted(source_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"- {source}: {count}")
+
+    lines.append("")
+    lines.append("### Categories")
+
+    for category, count in sorted(category_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"- {category}: {count}")
+
+    lines.append("")
+    lines.append("### Caution")
+    lines.append("- source='user' や source='world_update_v2' は補助情報として扱う。")
+    lines.append("- arXivは査読済みとは限らない。")
+    lines.append("- 最新ニュースや論文は原文・公式情報の確認が必要。")
+
+    return "\n".join(lines)
+
+
+_ks_v1_can_handle = KnowledgeTool.can_handle
+_ks_v1_execute = KnowledgeTool.execute
+
+def _ks_v2_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _ks_v1_can_handle(self, user_input)
+        or text.startswith("知識横断検索:")
+        or text.startswith("知識横断検索：")
+        or text.startswith("知識まとめ:")
+        or text.startswith("知識まとめ：")
+        or text.startswith("知識関連検索:")
+        or text.startswith("知識関連検索：")
+        or text.startswith("知識ソース確認:")
+        or text.startswith("知識ソース確認：")
+    )
+
+
+def _ks_v2_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text.startswith(("知識横断検索:", "知識横断検索：")):
+        return _ks_v2_cross_search(self, _ks_v2_sep(text))
+
+    if text.startswith(("知識まとめ:", "知識まとめ：")):
+        return _ks_v2_summary(self, _ks_v2_sep(text))
+
+    if text.startswith(("知識関連検索:", "知識関連検索：")):
+        return _ks_v2_related(self, _ks_v2_sep(text))
+
+    if text.startswith(("知識ソース確認:", "知識ソース確認：")):
+        return _ks_v2_source_check(self, _ks_v2_sep(text))
+
+    return _ks_v1_execute(self, user_input)
+
+
+KnowledgeTool.can_handle = _ks_v2_can_handle
+KnowledgeTool.execute = _ks_v2_execute
