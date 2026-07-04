@@ -22,13 +22,21 @@ class ConsoleInterface:
         print("Type 'exit' to shutdown.\n")
 
         while self.running:
-            user_input = input("You > ")
+            try:
+                user_input = input("You > ").strip()
 
-            if user_input.lower() in ["exit", "quit"]:
+                if not user_input:
+                    continue
+
+                if user_input.lower() in {"exit", "quit", "q"} or user_input in {"終了", "終わり"}:
+                    self.stop()
+                    break
+
+                self.respond(user_input)
+
+            except KeyboardInterrupt:
                 self.stop()
                 break
-
-            self.respond(user_input)
 
     def respond(self, user_input: str) -> None:
         logger.info(f"User input: {user_input}")
