@@ -43,6 +43,7 @@ class VisionTool(BaseTool):
             or text.startswith("画像安全確認:")
             or text.startswith("画像安全確認：")
             or text == "画像ヘルプ"
+            or text == "画像意味テスト"
             or text == "vision help"
         )
 
@@ -51,6 +52,9 @@ class VisionTool(BaseTool):
 
         if text in {"画像ヘルプ", "vision help"}:
             return self._help()
+
+        if text == "画像意味テスト":
+            return self._semantic_test()
 
         if text.startswith(("画像安全確認:", "画像安全確認：")):
             path = self._extract_path(text)
@@ -416,49 +420,84 @@ class VisionTool(BaseTool):
         width: int,
         height: int,
     ) -> list[tuple[str, int]]:
+        """
+        Vision Calibration v1
+
+        This is still heuristic scoring, not object recognition.
+        Main fix:
+        - Low saturation alone should not make mineral score too high.
+        - Green dominance should raise plant score more clearly.
+        - Illustration/photo should be separated by color variety and edge behavior.
+        """
         r, g, b = mean_rgb
         aspect = width / height if height else 1.0
 
-        green_strength = max(0.0, g - max(r, b))
-        gray_balance = 100.0 - min(100.0, (abs(r - g) + abs(g - b) + abs(b - r)) / 3.0)
-        vividness = saturation
-        hard_surface_signal = (contrast * 0.55) + (edge_score * 0.45)
+        max_rgb = max(r, g, b)
+        min_rgb = min(r, g, b)
+        rgb_range = max_rgb - min_rgb
 
-        plant = 20
-        plant += min(45, green_strength * 0.8)
-        plant += 15 if saturation > 25 else 0
-        plant += 10 if 55 < brightness < 210 else 0
-        plant -= 10 if gray_balance > 80 and saturation < 20 else 0
+        green_dominance = max(0.0, g - max(r, b))
+        green_ratio = g / max(1.0, (r + b) / 2.0)
+        gray_balance = 100.0 - min(100.0, rgb_range)
+        hard_surface_signal = (contrast * 0.65) + (edge_score * 0.35)
 
-        mineral = 20
-        mineral += 30 if saturation < 25 else 0
-        mineral += min(25, gray_balance * 0.25)
-        mineral += 15 if contrast > 30 else 0
-        mineral -= 10 if green_strength > 30 and saturation > 25 else 0
+        # 植物っぽさ:
+        # 緑優勢 + ある程度の彩度 + 明るすぎ/暗すぎない条件で上げる
+        plant = 12
+        plant += min(50, green_dominance * 1.15)
+        plant += 18 if green_ratio > 1.08 else 0
+        plant += 12 if saturation > 18 else 0
+        plant += 10 if 45 < brightness < 220 else 0
+        plant -= 12 if saturation < 10 else 0
 
+        # 石・鉱物っぽさ:
+        # 低彩度だけでは上げすぎない。
+        # 灰色寄り + 中〜高コントラスト + 緑優勢が弱い場合に上げる
+        mineral = 12
+        mineral += 14 if saturation < 18 else 0
+        mineral += 14 if gray_balance > 75 else 0
+        mineral += 12 if contrast > 35 else 0
+        mineral += 6 if edge_score > 10 else 0
+        mineral -= 28 if green_ratio > 1.08 and saturation > 15 else 0
+        mineral -= 14 if color_variety < 12 and brightness > 190 else 0
+        mineral -= 10 if color_variety < 12 and saturation > 15 else 0
+
+        # 人工物っぽさ:
+        # 輪郭・コントラスト・鮮やかさ・低自然色で上げる
         artificial = 20
-        artificial += min(30, hard_surface_signal * 0.4)
-        artificial += 15 if contrast > 45 else 0
-        artificial += 15 if saturation > 45 else 0
-        artificial += 10 if edge_score > 18 else 0
+        artificial += min(28, hard_surface_signal * 0.34)
+        artificial += 16 if contrast > 45 else 0
+        artificial += 14 if edge_score > 16 else 0
+        artificial += 10 if color_variety < 18 and contrast > 45 else 0
+        artificial += 12 if saturation > 42 else 0
+        artificial -= 8 if green_ratio > 1.12 and saturation > 18 else 0
 
-        illustration = 15
-        illustration += 25 if color_variety < 35 else 0
-        illustration += 20 if edge_score > 18 and saturation > 25 else 0
-        illustration += 15 if contrast > 40 else 0
-        illustration += 10 if vividness > 45 else 0
+        # イラストっぽさ:
+        # 色数少なめ + 輪郭 + 平坦色で上げる
+        illustration = 18
+        illustration += 28 if color_variety < 25 else 0
+        illustration += 22 if edge_score > 14 and contrast > 30 else 0
+        illustration += 16 if saturation > 18 and color_variety < 35 else 0
+        illustration += 12 if rgb_range > 20 and color_variety < 20 else 0
+        illustration += 10 if brightness > 190 and color_variety < 15 else 0
 
-        photo = 25
-        photo += 25 if color_variety > 35 else 0
-        photo += 15 if 20 < contrast < 75 else 0
-        photo += 15 if 10 < saturation < 70 else 0
-        photo += 10 if edge_score < 35 else 0
+        # 写真っぽさ:
+        # 色数と微妙な変化が多いほど上げる。
+        # サンプルのような単純図形では上がりすぎないよう調整。
+        photo = 20
+        photo += 26 if color_variety > 45 else 0
+        photo += 12 if 20 < contrast < 80 else 0
+        photo += 10 if 8 < saturation < 75 else 0
+        photo += 8 if 8 < edge_score < 35 else 0
+        photo -= 16 if color_variety < 18 else 0
 
-        background = 25
-        background += 20 if contrast < 35 else 0
-        background += 15 if saturation < 35 else 0
-        background += 10 if aspect > 1.2 else 0
-        background += 10 if color_variety < 45 else 0
+        # 背景っぽさ:
+        # 横長・低コントラスト・低彩度・色数少なめで上げる
+        background = 22
+        background += 16 if aspect > 1.2 else 0
+        background += 14 if contrast < 38 else 0
+        background += 12 if saturation < 35 else 0
+        background += 10 if color_variety < 30 else 0
 
         scores = [
             ("植物っぽさ", plant),
@@ -470,7 +509,6 @@ class VisionTool(BaseTool):
         ]
 
         return [(label, self._clamp_score(score)) for label, score in scores]
-
     def _semantic_interpretation(self, scores: list[tuple[str, int]]) -> list[str]:
         ordered = sorted(scores, key=lambda item: item[1], reverse=True)
         top_label, top_score = ordered[0]
@@ -512,13 +550,43 @@ class VisionTool(BaseTool):
     def _clamp_score(self, value: float) -> int:
         return int(max(0, min(100, round(value))))
 
+    def _semantic_test(self) -> str:
+        samples = [
+            ("green_sample", "tests/assets/vision_green_sample.png"),
+            ("gray_sample", "tests/assets/vision_gray_sample.png"),
+            ("graphic_sample", "tests/assets/vision_graphic_sample.png"),
+            ("original_sample", "tests/assets/sample_vision.png"),
+        ]
+
+        lines = [
+            "## Vision Semantic Test",
+            "",
+        ]
+
+        for label, path_text in samples:
+            result = self._semantic_analyze(path_text)
+            lines.append(f"### {label}")
+            if "### Semantic Scores" in result:
+                section = result.split("### Semantic Scores", 1)[1]
+                section = section.split("### Reading", 1)[0].strip()
+                lines.append(section)
+            else:
+                lines.append(result[:500])
+            lines.append("")
+
+        lines.append("Notes:")
+        lines.append("- これは回帰確認用の簡易テストです。")
+        lines.append("- スコアは推定であり、対象名の確定ではありません。")
+
+        return "\n".join(lines)
+
     def _help(self) -> str:
         return (
             "## Vision Tool Help\n\n"
             "使えるコマンド:\n"
             "- 画像安全確認: /path/to/image.png\n"
             "- 画像分析: /path/to/image.png\n"
-            "- 画像意味分析: /path/to/image.png\n\n"
+            "- 画像意味分析: /path/to/image.png\n- 画像意味テスト\n\n"
             "例:\n"
             "- 画像分析: tests/assets/sample_vision.png\n"
             "- 画像意味分析: tests/assets/sample_vision.png\n\n"
