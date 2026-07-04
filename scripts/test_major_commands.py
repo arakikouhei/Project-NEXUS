@@ -107,6 +107,16 @@ TESTS = [
         expected="imported-c5c64a3f",
     ),
     CommandTest(
+        name="Project memory save status",
+        command="NEXUS記憶保存状況",
+        expected="## Project Memory Save Status",
+    ),
+    CommandTest(
+        name="Project memory current stage",
+        command="NEXUS現在地",
+        expected="v0.4 active",
+    ),
+    CommandTest(
         name="Project memory overview",
         command="NEXUS記憶",
         expected="## NEXUS Project Memory",

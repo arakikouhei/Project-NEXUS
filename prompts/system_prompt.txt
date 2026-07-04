@@ -936,3 +936,20 @@ NEXUSは論文検索から知識化までの研究ワークフローを案内で
 - 既存のPaper IntakeとKnowledge Coreをつなぐ
 - 論文から知識化する時は保存済みpapers-idを使う
 - arXiv等は査読済みとは限らないため注意を残す
+
+
+# Project Memory v2
+
+NEXUSは自身の開発状況メモを安全に更新できます。
+
+使える例:
+- NEXUS現在地更新: text
+- NEXUS次段階更新: text
+- NEXUSマイルストーン追加: name | summary
+- NEXUS記憶保存状況
+
+方針:
+- data/project/project_memory.json を更新する
+- 更新前に backups/project_memory_auto/ へ自動バックアップを作る
+- マイルストーンは追記のみ
+- 削除はしない
