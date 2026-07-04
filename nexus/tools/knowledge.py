@@ -901,3 +901,262 @@ def _kd_v1_execute(self, user_input: str) -> str:
 
 KnowledgeTool.can_handle = _kd_v1_can_handle
 KnowledgeTool.execute = _kd_v1_execute
+
+
+# KNOWLEDGE_CLEANUP_V1_SAFE_PATCH
+
+def _kc_v1_all_entries(self) -> list[dict]:
+    try:
+        return self.store.list_entries(limit=2000)
+    except TypeError:
+        return self.store.list_entries()
+
+
+def _kc_v1_save_entries(self, entries: list[dict]) -> None:
+    # KnowledgeStoreの内部保存先に直接保存する。
+    # 既存構造を壊さないため、entries/list形式のみ扱う。
+    import json
+
+    path = getattr(self.store, "path", None)
+    if path is None:
+        path = getattr(self.store, "knowledge_path", None)
+    if path is None:
+        path = getattr(self.store, "file_path", None)
+
+    if path is None:
+        from pathlib import Path
+        path = Path("data/knowledge/knowledge.json")
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _kc_v1_short(content: str, limit: int = 180) -> str:
+    content = str(content).replace("\n", " ").strip()
+    if len(content) > limit:
+        return content[:limit].rstrip() + "..."
+    return content
+
+
+def _kc_v1_find_entry(entries: list[dict], entry_id: str):
+    for entry in entries:
+        if entry.get("id") == entry_id:
+            return entry
+    return None
+
+
+def _kc_v1_candidates(self) -> str:
+    entries = _kc_v1_all_entries(self)
+
+    if not entries:
+        return "## Knowledge Archive Candidates\n\n保存済み知識はまだありません。"
+
+    active = [e for e in entries if not e.get("archived")]
+    candidates = []
+
+    # URL重複候補
+    url_seen = {}
+
+    for entry in active:
+        content = str(entry.get("content", ""))
+        urls = []
+
+        for part in content.split():
+            if part.startswith("http://") or part.startswith("https://"):
+                urls.append(part.strip())
+
+        for url in urls:
+            if url in url_seen:
+                candidates.append({
+                    "reason": "URL重複",
+                    "keep": url_seen[url],
+                    "archive": entry,
+                    "url": url,
+                })
+            else:
+                url_seen[url] = entry
+
+    # world_update_v2の重複候補。同じcategory=world/source=world_update_v2なら古い方を候補にする
+    world_updates = [
+        e for e in active
+        if e.get("category") == "world" and e.get("source") == "world_update_v2"
+    ]
+
+    if len(world_updates) >= 2:
+        sorted_world = sorted(world_updates, key=lambda e: str(e.get("created_at", "")), reverse=True)
+        keep = sorted_world[0]
+        for old in sorted_world[1:]:
+            candidates.append({
+                "reason": "world_update_v2の重複候補",
+                "keep": keep,
+                "archive": old,
+                "url": "",
+            })
+
+    lines = [
+        "## Knowledge Archive Candidates",
+        "",
+        f"Total Entries: {len(entries)}",
+        f"Active Entries: {len(active)}",
+        f"Candidates: {len(candidates)}",
+        "",
+    ]
+
+    if not candidates:
+        lines.append("アーカイブ候補は見つかりませんでした。")
+        return "\n".join(lines)
+
+    for item in candidates[:15]:
+        keep = item["keep"]
+        archive = item["archive"]
+
+        lines.append(f"### Candidate: {archive.get('id')}")
+        lines.append(f"- Reason: {item.get('reason')}")
+        lines.append(f"- Keep: {keep.get('id')}")
+        lines.append(f"- Archive Candidate: {archive.get('id')}")
+        if item.get("url"):
+            lines.append(f"- Duplicate URL: {item.get('url')}")
+        lines.append(f"- Preview: {_kc_v1_short(archive.get('content', ''))}")
+        lines.append(f"- Archive Command: 知識アーカイブ: {archive.get('id')}")
+        lines.append("")
+
+    lines.append("Note: v1は削除しません。archived=true を付けるだけです。")
+
+    return "\n".join(lines).rstrip()
+
+
+def _kc_v1_archive(self, entry_id: str) -> str:
+    entry_id = entry_id.strip()
+
+    if not entry_id:
+        return "IDがありません。例: 知識アーカイブ: world-a40a20ca"
+
+    entries = _kc_v1_all_entries(self)
+    entry = _kc_v1_find_entry(entries, entry_id)
+
+    if not entry:
+        return f"知識IDが見つかりません: {entry_id}"
+
+    if entry.get("archived"):
+        return f"## Knowledge Archive\n\nすでにアーカイブ済みです: {entry_id}"
+
+    from datetime import datetime
+
+    entry["archived"] = True
+    entry["archived_at"] = datetime.now().isoformat(timespec="seconds")
+    entry["archive_reason"] = entry.get("archive_reason") or "manual"
+
+    _kc_v1_save_entries(self, entries)
+
+    return (
+        "## Knowledge Archived\n\n"
+        f"- ID: {entry.get('id')}\n"
+        f"- Category: {entry.get('category')}\n"
+        f"- Source: {entry.get('source')}\n"
+        f"- Archived: true\n\n"
+        "削除はしていません。復元する場合:\n"
+        f"知識復元: {entry.get('id')}"
+    )
+
+
+def _kc_v1_archive_list(self) -> str:
+    entries = _kc_v1_all_entries(self)
+    archived = [e for e in entries if e.get("archived")]
+
+    lines = [
+        "## Knowledge Archive List",
+        "",
+        f"Archived Entries: {len(archived)}",
+        "",
+    ]
+
+    if not archived:
+        lines.append("アーカイブ済み知識はまだありません。")
+        return "\n".join(lines)
+
+    for entry in archived[:30]:
+        lines.append(f"### {entry.get('id')}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Archived At: {entry.get('archived_at')}")
+        lines.append(f"- Reason: {entry.get('archive_reason')}")
+        lines.append(f"- Preview: {_kc_v1_short(entry.get('content', ''))}")
+        lines.append(f"- Restore Command: 知識復元: {entry.get('id')}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _kc_v1_restore(self, entry_id: str) -> str:
+    entry_id = entry_id.strip()
+
+    if not entry_id:
+        return "IDがありません。例: 知識復元: world-a40a20ca"
+
+    entries = _kc_v1_all_entries(self)
+    entry = _kc_v1_find_entry(entries, entry_id)
+
+    if not entry:
+        return f"知識IDが見つかりません: {entry_id}"
+
+    if not entry.get("archived"):
+        return f"## Knowledge Restore\n\nこの知識はアーカイブされていません: {entry_id}"
+
+    entry["archived"] = False
+    entry["restored_at"] = __import__("datetime").datetime.now().isoformat(timespec="seconds")
+
+    _kc_v1_save_entries(self, entries)
+
+    return (
+        "## Knowledge Restored\n\n"
+        f"- ID: {entry.get('id')}\n"
+        f"- Category: {entry.get('category')}\n"
+        f"- Source: {entry.get('source')}\n"
+        f"- Archived: false"
+    )
+
+
+_kc_v1_can_handle_base = KnowledgeTool.can_handle
+_kc_v1_execute_base = KnowledgeTool.execute
+
+def _kc_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _kc_v1_can_handle_base(self, user_input)
+        or text == "知識アーカイブ候補"
+        or text == "知識アーカイブ一覧"
+        or text.startswith("知識アーカイブ:")
+        or text.startswith("知識アーカイブ：")
+        or text.startswith("知識復元:")
+        or text.startswith("知識復元：")
+    )
+
+
+def _kc_v1_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _kc_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text == "知識アーカイブ候補":
+        return _kc_v1_candidates(self)
+
+    if text == "知識アーカイブ一覧":
+        return _kc_v1_archive_list(self)
+
+    if text.startswith(("知識アーカイブ:", "知識アーカイブ：")):
+        return _kc_v1_archive(self, _kc_v1_sep(text))
+
+    if text.startswith(("知識復元:", "知識復元：")):
+        return _kc_v1_restore(self, _kc_v1_sep(text))
+
+    return _kc_v1_execute_base(self, user_input)
+
+
+KnowledgeTool.can_handle = _kc_v1_can_handle
+KnowledgeTool.execute = _kc_v1_execute
