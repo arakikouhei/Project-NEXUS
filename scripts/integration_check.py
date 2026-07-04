@@ -30,11 +30,17 @@ def check_python_compile() -> bool:
         "nexus/tools/worklog.py",
         "nexus/tools/hardware.py",
         "nexus/tools/capability.py",
+        "nexus/tools/transfer.py",
+        "nexus/tools/web.py",
+        "nexus/tools/app.py",
+        "nexus/tools/math.py",
+        "nexus/security/web_guard.py",
         "nexus/context/builder.py",
         "nexus/agent/agent.py",
         "nexus/agent/planner.py",
         "nexus/device/interface.py",
         "nexus/device/mock.py",
+        "nexus/transfer/exporter.py",
     ]
 
     ok = True
@@ -85,6 +91,11 @@ def check_tools() -> bool:
         ("球体準備", "Sphere Readiness"),
         ("できること", "NEXUS Capabilities"),
         ("作業ログ", "Work Log"),
+        ("移行内容確認", "Sphere Transfer Preview"),
+        ("計算: (2+5)*3", "21"),
+        ("単位変換: 40km/hをm/s", "11.1111"),
+        ("url安全確認: https://example.com", "URL Safety Check"),
+        ("アプリ一覧", "Allowed Apps"),
     ]
 
     ok = True

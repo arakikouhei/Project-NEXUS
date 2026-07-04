@@ -16,6 +16,9 @@ from nexus.tools.worklog import WorkLogTool
 from nexus.tools.hardware import HardwareTool
 from nexus.tools.capability import CapabilityTool
 from nexus.tools.transfer import TransferTool
+from nexus.tools.web import WebTool
+from nexus.tools.app import AppControlTool
+from nexus.tools.math import AdvancedMathTool
 from nexus.tools.calculator import CalculatorTool
 from nexus.tools.filesystem import FileSystemTool
 from nexus.tools.project import ProjectTool
@@ -40,6 +43,9 @@ class ToolManager:
         self.register(HardwareTool())
         self.register(CapabilityTool())
         self.register(TransferTool())
+        self.register(WebTool())
+        self.register(AppControlTool())
+        self.register(AdvancedMathTool())
         self.register(CalculatorTool())
         self.register(FileSystemTool())
         self.register(ProjectTool())
