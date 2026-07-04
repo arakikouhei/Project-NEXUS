@@ -10,10 +10,10 @@ from nexus.tools.base_tool import BaseTool
 
 
 class GitTool(BaseTool):
-    """Handles safe Git read-only commands."""
+    """Handles safe Git commands."""
 
     name = "git"
-    description = "Gitの状態を安全に確認します"
+    description = "Gitの状態確認と安全なコミット操作を行います"
 
     def __init__(self) -> None:
         self.working_directory = Path.cwd()
@@ -31,11 +31,21 @@ class GitTool(BaseTool):
             "git要約",
             "変更まとめ",
             "コミット準備",
+            "コミットして",
         }
         return any(keyword in user_input for keyword in keywords)
 
     def execute(self, user_input: str) -> str:
-        
+        if "コミットして" in user_input:
+            message = self._extract_commit_message(user_input)
+            if not message:
+                return (
+                    "コミットメッセージがありません。\n\n"
+                    "例:\n"
+                    "コミットして: Add git workflow"
+                )
+            return self._commit_all(message)
+
         if "コミット準備" in user_input:
             return self._prepare_commit()
 
@@ -53,8 +63,6 @@ class GitTool(BaseTool):
 
         if "ブランチ確認" in user_input or "今のブランチ" in user_input:
             return self._run_git_command(["git", "branch", "--show-current"], "Current Branch")
-
-    
 
         return "対応していないGit操作です。"
 
@@ -85,6 +93,7 @@ class GitTool(BaseTool):
 
         except Exception as error:
             return f"GitToolでエラーが発生しました: {error}"
+
     def _prepare_commit(self) -> str:
         summary = self._summarize_git_status()
         diff_summary = self._run_git_command(
@@ -98,8 +107,72 @@ class GitTool(BaseTool):
             f"{diff_summary}\n\n"
             "---\n\n"
             "これは確認用です。まだコミットは実行していません。\n"
-            "問題なければ、Macのターミナルで `git add .` と `git commit` を実行してください。"
+            "コミットする場合は次のように入力してください。\n\n"
+            "コミットして: Add feature description"
         )
+
+    def _extract_commit_message(self, user_input: str) -> str:
+        for separator in [":", "："]:
+            if separator in user_input:
+                return user_input.split(separator, 1)[1].strip()
+        return ""
+
+    def _commit_all(self, message: str) -> str:
+        status_lines = self._get_porcelain_status()
+
+        if status_lines is None:
+            return "Git状態の取得に失敗したため、コミットできませんでした。"
+
+        if not status_lines:
+            return "コミットする変更はありません。"
+
+        if "\n" in message:
+            return "コミットメッセージに改行は使えません。"
+
+        if len(message) > 120:
+            return "コミットメッセージが長すぎます。120文字以内にしてください。"
+
+        try:
+            add_result = subprocess.run(
+                ["git", "add", "."],
+                cwd=self.working_directory,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            if add_result.returncode != 0:
+                error = add_result.stderr.strip()
+                return f"git add に失敗しました。\n\n{error}"
+
+            commit_result = subprocess.run(
+                ["git", "commit", "-m", message],
+                cwd=self.working_directory,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+
+            output = commit_result.stdout.strip()
+            error = commit_result.stderr.strip()
+
+            if commit_result.returncode != 0:
+                return f"コミットに失敗しました。\n\n{error or output}"
+
+            return (
+                "## Commit Completed\n\n"
+                f"メッセージ: {message}\n\n"
+                f"{self._limit_output(output)}\n\n"
+                "GitHubへ送る場合は、NEXUSを終了してMacのターミナルで `git push` を実行してください。"
+            )
+
+        except subprocess.TimeoutExpired:
+            return "Gitコミット処理がタイムアウトしました。"
+
+        except Exception as error:
+            return f"コミット中にエラーが発生しました: {error}"
 
     def _summarize_git_status(self) -> str:
         branch = self._get_current_branch()
@@ -180,7 +253,6 @@ class GitTool(BaseTool):
                 check=False,
             )
             return result.stdout.strip() or "不明"
-
         except Exception:
             return "不明"
 

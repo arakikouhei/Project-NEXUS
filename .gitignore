@@ -1,15 +1,19 @@
 # Python
 __pycache__/
 *.pyc
-
-# Logs
-logs/
+*.pyo
+*.pyd
 
 # macOS
 .DS_Store
 
-# VS Code
-.vscode/
-
 # Logs
-logs/*.log
+logs/
+*.log
+
+# Backups
+backups/
+
+# Virtual environments
+.venv/
+venv/

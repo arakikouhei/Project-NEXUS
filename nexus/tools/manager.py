@@ -7,6 +7,9 @@ from nexus.tools.base_tool import BaseTool
 from nexus.tools.clock import ClockTool
 from nexus.tools.git import GitTool
 from nexus.tools.terminal import TerminalTool
+from nexus.tools.context import ContextTool
+from nexus.tools.system import SystemTool
+from nexus.tools.voice import VoiceTool
 from nexus.tools.calculator import CalculatorTool
 from nexus.tools.filesystem import FileSystemTool
 from nexus.tools.project import ProjectTool
@@ -22,6 +25,9 @@ class ToolManager:
         self.register(ClockTool())
         self.register(GitTool())
         self.register(TerminalTool())
+        self.register(ContextTool())
+        self.register(SystemTool())
+        self.register(VoiceTool())
         self.register(CalculatorTool())
         self.register(FileSystemTool())
         self.register(ProjectTool())
