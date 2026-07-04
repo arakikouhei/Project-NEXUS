@@ -30,10 +30,15 @@ class GitTool(BaseTool):
             "今のブランチ",
             "git要約",
             "変更まとめ",
+            "コミット準備",
         }
         return any(keyword in user_input for keyword in keywords)
 
     def execute(self, user_input: str) -> str:
+        
+        if "コミット準備" in user_input:
+            return self._prepare_commit()
+
         if "git要約" in user_input or "変更まとめ" in user_input:
             return self._summarize_git_status()
 
@@ -48,6 +53,8 @@ class GitTool(BaseTool):
 
         if "ブランチ確認" in user_input or "今のブランチ" in user_input:
             return self._run_git_command(["git", "branch", "--show-current"], "Current Branch")
+
+    
 
         return "対応していないGit操作です。"
 
@@ -78,6 +85,21 @@ class GitTool(BaseTool):
 
         except Exception as error:
             return f"GitToolでエラーが発生しました: {error}"
+    def _prepare_commit(self) -> str:
+        summary = self._summarize_git_status()
+        diff_summary = self._run_git_command(
+            ["git", "diff", "--stat"],
+            "Git Diff Summary",
+        )
+
+        return (
+            f"{summary}\n\n"
+            "---\n\n"
+            f"{diff_summary}\n\n"
+            "---\n\n"
+            "これは確認用です。まだコミットは実行していません。\n"
+            "問題なければ、Macのターミナルで `git add .` と `git commit` を実行してください。"
+        )
 
     def _summarize_git_status(self) -> str:
         branch = self._get_current_branch()
