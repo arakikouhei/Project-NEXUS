@@ -226,6 +226,10 @@ class NexusAgent:
             "バックアップコマンド",
             "診断コマンド",
             "おすすめ次操作",
+            "NEXUS記憶",
+            "NEXUS開発状況",
+            "NEXUS現在地",
+            "NEXUSマイルストーン",
         )
 
         if stripped_input in system_health_commands:

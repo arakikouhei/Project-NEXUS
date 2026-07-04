@@ -82,6 +82,26 @@ TESTS = [
         expected="## Backup / Export List",
     ),
     CommandTest(
+        name="Project memory overview",
+        command="NEXUS記憶",
+        expected="## NEXUS Project Memory",
+    ),
+    CommandTest(
+        name="Project memory status",
+        command="NEXUS開発状況",
+        expected="## NEXUS Development Status",
+    ),
+    CommandTest(
+        name="Project memory position",
+        command="NEXUS現在地",
+        expected="## NEXUS Current Position",
+    ),
+    CommandTest(
+        name="Project memory milestones",
+        command="NEXUSマイルストーン",
+        expected="## NEXUS Milestones",
+    ),
+    CommandTest(
         name="Tool collision check",
         command="ツール衝突チェック",
         expected="Tool Collision Check",
