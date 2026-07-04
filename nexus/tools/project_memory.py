@@ -1,14 +1,14 @@
 """
 Project NEXUS
-Project Memory Tool v1
+Project Memory Tool v1/v2
 
-Shows the current development state of Project NEXUS.
+Shows and safely updates the current development state of Project NEXUS.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 import json
 import subprocess
 
@@ -16,20 +16,28 @@ from nexus.tools.base_tool import BaseTool
 
 
 class ProjectMemoryTool(BaseTool):
-    """Shows Project NEXUS development memory."""
+    """Shows and updates Project NEXUS development memory."""
 
     name = "project_memory"
-    description = "NEXUS自身の開発状況・現在地・マイルストーンを表示します"
+    description = "NEXUS自身の開発状況・現在地・マイルストーンを表示・更新します"
+
+    MEMORY_PATH = Path("data/project/project_memory.json")
 
     def can_handle(self, user_input: str) -> bool:
         text = user_input.strip()
 
-        return text in {
-            "NEXUS記憶",
-            "NEXUS開発状況",
-            "NEXUS現在地",
-            "NEXUSマイルストーン",
-        }
+        return (
+            text in {
+                "NEXUS記憶",
+                "NEXUS開発状況",
+                "NEXUS現在地",
+                "NEXUSマイルストーン",
+                "NEXUS記憶保存状況",
+            }
+            or text.startswith("NEXUS現在地更新:")
+            or text.startswith("NEXUS次段階更新:")
+            or text.startswith("NEXUSマイルストーン追加:")
+        )
 
     def execute(self, user_input: str) -> str:
         text = user_input.strip()
@@ -47,19 +55,61 @@ class ProjectMemoryTool(BaseTool):
         if text == "NEXUSマイルストーン":
             return self._milestones(data)
 
+        if text == "NEXUS記憶保存状況":
+            return self._memory_save_status()
+
+        if text.startswith("NEXUS現在地更新:"):
+            value = text.split(":", 1)[1].strip()
+            return self._update_current_stage(value)
+
+        if text.startswith("NEXUS次段階更新:"):
+            value = text.split(":", 1)[1].strip()
+            return self._update_next_stage(value)
+
+        if text.startswith("NEXUSマイルストーン追加:"):
+            value = text.split(":", 1)[1].strip()
+            return self._add_milestone(value)
+
         return "対応していないProject Memory操作です。"
 
     def _load_memory(self) -> dict:
-        path = Path("data/project/project_memory.json")
-
-        if not path.exists():
+        if not self.MEMORY_PATH.exists():
             return {}
 
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data = json.loads(self.MEMORY_PATH.read_text(encoding="utf-8"))
             return data if isinstance(data, dict) else {}
         except Exception:
             return {}
+
+    def _save_memory(self, data: dict) -> Path:
+        self.MEMORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self._backup_memory_file()
+
+        data["updated_at"] = datetime.now().isoformat(timespec="seconds")
+
+        self.MEMORY_PATH.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        return self.MEMORY_PATH
+
+    def _backup_memory_file(self) -> Path | None:
+        if not self.MEMORY_PATH.exists():
+            return None
+
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = Path("backups") / "project_memory_auto" / stamp
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        backup_path = backup_dir / self.MEMORY_PATH.name
+        backup_path.write_text(
+            self.MEMORY_PATH.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+        return backup_path
 
     def _git_latest_commit(self) -> str:
         try:
@@ -108,6 +158,7 @@ class ProjectMemoryTool(BaseTool):
 - NEXUS開発状況
 - NEXUS現在地
 - NEXUSマイルストーン
+- NEXUS記憶保存状況
 """
 
     def _development_status(self, data: dict) -> str:
@@ -156,11 +207,7 @@ class ProjectMemoryTool(BaseTool):
         for option in options:
             lines.append(f"- {option}")
 
-        lines.extend([
-            "",
-            "### Safety Policy",
-            "",
-        ])
+        lines.extend(["", "### Safety Policy", ""])
 
         for item in safety:
             lines.append(f"- {item}")
@@ -186,79 +233,15 @@ class ProjectMemoryTool(BaseTool):
             lines.append(f"### {name}")
             lines.append(f"- Status: {status}")
             lines.append(f"- Summary: {summary}")
+
+            if item.get("created_at"):
+                lines.append(f"- Created At: {item.get('created_at')}")
+
             lines.append("")
 
         return "\n".join(lines).rstrip()
 
-# PROJECT_MEMORY_V2_UPDATE_PATCH
-
-def _project_memory_v2_backup_file(path: Path) -> Path | None:
-    if not path.exists():
-        return None
-
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_dir = Path("backups") / "project_memory_auto" / stamp
-    backup_dir.mkdir(parents=True, exist_ok=True)
-
-    backup_path = backup_dir / path.name
-    backup_path.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
-    return backup_path
-
-
-def _project_memory_v2_save_memory(data: dict) -> Path:
-    path = Path("data/project/project_memory.json")
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    _project_memory_v2_backup_file(path)
-
-    data["updated_at"] = datetime.now().isoformat(timespec="seconds")
-
-    path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-    return path
-
-
-def _project_memory_v2_append_methods():
-    original_can_handle = ProjectMemoryTool.can_handle
-    original_execute = ProjectMemoryTool.execute
-
-    def can_handle_v2(self, user_input: str) -> bool:
-        text = user_input.strip()
-
-        if (
-            text.startswith("NEXUS現在地更新:")
-            or text.startswith("NEXUS次段階更新:")
-            or text.startswith("NEXUSマイルストーン追加:")
-            or text == "NEXUS記憶保存状況"
-        ):
-            return True
-
-        return original_can_handle(self, user_input)
-
-    def execute_v2(self, user_input: str) -> str:
-        text = user_input.strip()
-
-        if text.startswith("NEXUS現在地更新:"):
-            value = text.split(":", 1)[1].strip()
-            return self._update_current_stage_v2(value)
-
-        if text.startswith("NEXUS次段階更新:"):
-            value = text.split(":", 1)[1].strip()
-            return self._update_next_stage_v2(value)
-
-        if text.startswith("NEXUSマイルストーン追加:"):
-            value = text.split(":", 1)[1].strip()
-            return self._add_milestone_v2(value)
-
-        if text == "NEXUS記憶保存状況":
-            return self._memory_save_status_v2()
-
-        return original_execute(self, user_input)
-
-    def _update_current_stage_v2(self, value: str) -> str:
+    def _update_current_stage(self, value: str) -> str:
         if not value:
             return "更新内容が空です。例: NEXUS現在地更新: v0.4 active"
 
@@ -266,7 +249,7 @@ def _project_memory_v2_append_methods():
         before = data.get("current_stage", "unknown")
         data["current_stage"] = value
 
-        path = _project_memory_v2_save_memory(data)
+        path = self._save_memory(data)
 
         return f"""## Project Memory Updated
 
@@ -280,7 +263,7 @@ def _project_memory_v2_append_methods():
 - NEXUS開発状況
 """
 
-    def _update_next_stage_v2(self, value: str) -> str:
+    def _update_next_stage(self, value: str) -> str:
         if not value:
             return "更新内容が空です。例: NEXUS次段階更新: Safe Refactor v1"
 
@@ -288,7 +271,7 @@ def _project_memory_v2_append_methods():
         before = data.get("recommended_next_stage", "unknown")
         data["recommended_next_stage"] = value
 
-        path = _project_memory_v2_save_memory(data)
+        path = self._save_memory(data)
 
         return f"""## Project Memory Updated
 
@@ -301,7 +284,7 @@ def _project_memory_v2_append_methods():
 - NEXUS現在地
 """
 
-    def _add_milestone_v2(self, value: str) -> str:
+    def _add_milestone(self, value: str) -> str:
         if not value:
             return "追加内容が空です。例: NEXUSマイルストーン追加: Knowledge Import v1 | Local notes can be imported."
 
@@ -335,14 +318,14 @@ def _project_memory_v2_append_methods():
         milestone = {
             "name": name,
             "status": "completed",
-            "summary": summary or "Added from Project Memory v2.",
+            "summary": summary or "Added from Project Memory.",
             "created_at": datetime.now().isoformat(timespec="seconds"),
         }
 
         milestones.append(milestone)
         data["major_milestones"] = milestones
 
-        path = _project_memory_v2_save_memory(data)
+        path = self._save_memory(data)
 
         return f"""## Milestone Added
 
@@ -355,21 +338,26 @@ def _project_memory_v2_append_methods():
 - NEXUSマイルストーン
 """
 
-    def _memory_save_status_v2(self) -> str:
-        path = Path("data/project/project_memory.json")
-        backups = sorted(
-            Path("backups/project_memory_auto").glob("*/*"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        ) if Path("backups/project_memory_auto").exists() else []
+    def _memory_save_status(self) -> str:
+        backup_root = Path("backups/project_memory_auto")
+
+        backups = (
+            sorted(
+                backup_root.glob("*/*"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if backup_root.exists()
+            else []
+        )
 
         data = self._load_memory()
 
         lines = [
             "## Project Memory Save Status",
             "",
-            f"- Memory File Exists: {path.exists()}",
-            f"- Memory File: {path}",
+            f"- Memory File Exists: {self.MEMORY_PATH.exists()}",
+            f"- Memory File: {self.MEMORY_PATH}",
             f"- Current Stage: {data.get('current_stage', 'unknown')}",
             f"- Recommended Next Stage: {data.get('recommended_next_stage', 'unknown')}",
             f"- Updated At: {data.get('updated_at', 'unknown')}",
@@ -386,15 +374,3 @@ def _project_memory_v2_append_methods():
             lines.append("- なし")
 
         return "\n".join(lines)
-
-    ProjectMemoryTool.can_handle = can_handle_v2
-    ProjectMemoryTool.execute = execute_v2
-    ProjectMemoryTool._update_current_stage_v2 = _update_current_stage_v2
-    ProjectMemoryTool._update_next_stage_v2 = _update_next_stage_v2
-    ProjectMemoryTool._add_milestone_v2 = _add_milestone_v2
-    ProjectMemoryTool._memory_save_status_v2 = _memory_save_status_v2
-
-
-if not hasattr(ProjectMemoryTool, "_project_memory_v2_patched"):
-    ProjectMemoryTool._project_memory_v2_patched = True
-    _project_memory_v2_append_methods()
