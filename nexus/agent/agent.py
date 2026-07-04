@@ -6,6 +6,7 @@ Agent
 from nexus.agent.planner import SimplePlanner
 from nexus.core.input_normalizer import InputNormalizer
 from nexus.tools.manager import ToolManager
+from nexus.personality.response_dynamics import ResponseDynamicsCore
 
 
 class NexusAgent:
@@ -14,6 +15,7 @@ class NexusAgent:
     def __init__(self) -> None:
         self.tools = ToolManager()
         self.planner = SimplePlanner()
+        self.response_dynamics = ResponseDynamicsCore()
         self.normalizer = InputNormalizer()
 
     def process(self, user_input: str) -> tuple[bool, str | None]:

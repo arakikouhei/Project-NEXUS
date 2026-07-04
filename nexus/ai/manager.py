@@ -11,6 +11,8 @@ from nexus.memory.conversation import ConversationMemory
 from nexus.memory.manager import MemoryManager
 from nexus.tools.manager import ToolManager
 from nexus.agent.agent import NexusAgent
+from nexus.personality.response_dynamics import ResponseDynamicsCore
+from nexus.personality.response_filter import ResponsePostProcessor
 
 class AIManager:
     """Controls all AI interactions."""
@@ -20,6 +22,8 @@ class AIManager:
         self.memory = MemoryManager()
         self.conversation = ConversationMemory()
         self.agent = NexusAgent()
+        self.response_dynamics = ResponseDynamicsCore()
+        self.response_post_processor = ResponsePostProcessor()
 
         if settings.AI_ENGINE == "basic":
             self.model_name = "BasicLocalResponder"
@@ -47,7 +51,9 @@ class AIManager:
 
         self.conversation.add("user", user_input)
 
-        response = self.engine.generate_response(user_input)
+        ai_input = self.response_dynamics.wrap_user_input(user_input)
+        response = self.engine.generate_response(ai_input)
+        response = self.response_post_processor.clean(response, user_input)
 
         self.conversation.add("assistant", response)
 

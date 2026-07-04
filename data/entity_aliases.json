@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "description": "Entity aliases for Project NEXUS. Add user-specific abbreviations here.",
+  "aliases": {
+    "東京造形": {
+      "canonical": "東京造形大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "美術・デザイン系大学の略称として扱う。東京と造形に分解しない。"
+    },
+    "東京造形大": {
+      "canonical": "東京造形大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "東京造形大学の略称。"
+    },
+    "造形大": {
+      "canonical": "東京造形大学",
+      "category": "university",
+      "confidence": "medium",
+      "note": "文脈によって他大学の可能性もあるので、必要なら確認する。"
+    },
+    "多摩美": {
+      "canonical": "多摩美術大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "美術大学の略称。"
+    },
+    "武蔵美": {
+      "canonical": "武蔵野美術大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "美術大学の略称。"
+    },
+    "ムサビ": {
+      "canonical": "武蔵野美術大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "武蔵野美術大学の通称。"
+    },
+    "日芸": {
+      "canonical": "日本大学芸術学部",
+      "category": "university_department",
+      "confidence": "high",
+      "note": "芸術系学部の略称。"
+    },
+    "女子美": {
+      "canonical": "女子美術大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "美術大学の略称。"
+    },
+    "東藝大": {
+      "canonical": "東京藝術大学",
+      "category": "university",
+      "confidence": "high",
+      "note": "東京藝術大学の略称。"
+    },
+    "芸大": {
+      "canonical": "東京藝術大学",
+      "category": "university",
+      "confidence": "medium",
+      "note": "地域により別大学を指す可能性があるため、必要なら確認する。"
+    },
+    "Maya": {
+      "canonical": "Autodesk Maya",
+      "category": "software",
+      "confidence": "high",
+      "note": "3DCGソフト。ゲームだと決めつけない。"
+    },
+    "maya": {
+      "canonical": "Autodesk Maya",
+      "category": "software",
+      "confidence": "high",
+      "note": "3DCGソフト。文脈が制作ならAutodesk Mayaとして扱う。"
+    },
+    "マヤ": {
+      "canonical": "Autodesk Maya",
+      "category": "software_or_other",
+      "confidence": "medium",
+      "note": "3DCG文脈ならAutodesk Maya。神話・文明の可能性もある。"
+    },
+    "クリスタ": {
+      "canonical": "CLIP STUDIO PAINT",
+      "category": "software",
+      "confidence": "high",
+      "note": "イラスト制作ソフト。"
+    },
+    "イラレ": {
+      "canonical": "Adobe Illustrator",
+      "category": "software",
+      "confidence": "high",
+      "note": "Adobe Illustratorの略称。"
+    },
+    "プレミア": {
+      "canonical": "Adobe Premiere Pro",
+      "category": "software",
+      "confidence": "medium",
+      "note": "映像編集文脈ならPremiere Pro。"
+    },
+    "Premiere": {
+      "canonical": "Adobe Premiere Pro",
+      "category": "software",
+      "confidence": "high",
+      "note": "映像編集ソフト。"
+    },
+    "Premiere Pro": {
+      "canonical": "Adobe Premiere Pro",
+      "category": "software",
+      "confidence": "high",
+      "note": "映像編集ソフト。"
+    },
+    "Mudbox": {
+      "canonical": "Autodesk Mudbox",
+      "category": "software",
+      "confidence": "high",
+      "note": "3Dスカルプト系ソフト。"
+    },
+    "マッドボックス": {
+      "canonical": "Autodesk Mudbox",
+      "category": "software",
+      "confidence": "high",
+      "note": "3Dスカルプト系ソフト。"
+    },
+    "C4D": {
+      "canonical": "Cinema 4D",
+      "category": "software",
+      "confidence": "high",
+      "note": "3DCGソフト。"
+    },
+    "AE": {
+      "canonical": "Adobe After Effects",
+      "category": "software",
+      "confidence": "medium",
+      "note": "映像文脈ならAfter Effects。"
+    },
+    "After Effects": {
+      "canonical": "Adobe After Effects",
+      "category": "software",
+      "confidence": "high",
+      "note": "映像・モーショングラフィックスソフト。"
+    }
+  }
+}
