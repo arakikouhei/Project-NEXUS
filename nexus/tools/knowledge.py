@@ -2207,3 +2207,224 @@ def _ka_v2_execute(self, user_input: str) -> str:
 
 
 KnowledgeTool.execute = _ka_v2_execute
+
+
+# KNOWLEDGE_AUTO_RECALL_GUARD_V1_SAFE_PATCH
+
+def _kar_v1_settings_path():
+    from pathlib import Path
+    return Path("data/knowledge/auto_recall_settings.json")
+
+
+def _kar_v1_load_settings() -> dict:
+    import json
+
+    path = _kar_v1_settings_path()
+
+    if not path.exists():
+        return {
+            "enabled": False,
+            "max_results": 3,
+            "min_score": 18,
+        }
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return {
+                "enabled": bool(data.get("enabled", False)),
+                "max_results": int(data.get("max_results", 3)),
+                "min_score": int(data.get("min_score", 18)),
+            }
+    except Exception:
+        pass
+
+    return {
+        "enabled": False,
+        "max_results": 3,
+        "min_score": 18,
+    }
+
+
+def _kar_v1_save_settings(settings: dict) -> None:
+    import json
+
+    path = _kar_v1_settings_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _kar_v1_sep(text: str) -> str:
+    for s in [":", "："]:
+        if s in text:
+            return text.split(s, 1)[1].strip()
+    return ""
+
+
+def _kar_v1_status() -> str:
+    settings = _kar_v1_load_settings()
+    mode = "ON" if settings.get("enabled") else "OFF"
+
+    return (
+        "## Knowledge Auto Recall Settings\n\n"
+        f"- Mode: {mode}\n"
+        f"- enabled: {settings.get('enabled')}\n"
+        f"- max_results: {settings.get('max_results')}\n"
+        f"- min_score: {settings.get('min_score')}\n\n"
+        "Commands:\n"
+        "- 知識自動参照ON\n"
+        "- 知識自動参照OFF\n"
+        "- 知識自動参照テスト: MayaのUV\n"
+        "- 知識自動参照テスト: PointDiT\n\n"
+        "Note:\n"
+        "- デフォルトはOFFです。\n"
+        "- ONにしても、雑談や既存コマンドは邪魔しない方針です。"
+    )
+
+
+def _kar_v1_on() -> str:
+    settings = _kar_v1_load_settings()
+    settings["enabled"] = True
+    _kar_v1_save_settings(settings)
+
+    return (
+        "## Knowledge Auto Recall Updated\n\n"
+        "- Mode: ON\n"
+        "- enabled: true\n\n"
+        "会話中に関連知識を参照する準備を有効にしました。"
+    )
+
+
+def _kar_v1_off() -> str:
+    settings = _kar_v1_load_settings()
+    settings["enabled"] = False
+    _kar_v1_save_settings(settings)
+
+    return (
+        "## Knowledge Auto Recall Updated\n\n"
+        "- Mode: OFF\n"
+        "- enabled: false\n\n"
+        "自動参照は無効です。"
+    )
+
+
+def _kar_v1_find_related(self, query: str) -> list[tuple[int, dict]]:
+    query = query.strip()
+
+    if not query:
+        return []
+
+    try:
+        entries = self.store.list_entries(limit=2000)
+    except TypeError:
+        entries = self.store.list_entries()
+
+    entries = [entry for entry in entries if not entry.get("archived")]
+
+    scored = []
+
+    for entry in entries:
+        try:
+            score = _ka_v1_1_score(entry, query)
+        except Exception:
+            try:
+                score = _ks_v2_score(entry, query)
+            except Exception:
+                score = 0
+
+        if score > 0:
+            scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return scored
+
+
+def _kar_v1_test(self, query: str) -> str:
+    query = query.strip()
+
+    if not query:
+        return "検索語がありません。例: 知識自動参照テスト: MayaのUV"
+
+    settings = _kar_v1_load_settings()
+    scored = _kar_v1_find_related(self, query)
+
+    min_score = int(settings.get("min_score", 18))
+    max_results = int(settings.get("max_results", 3))
+
+    filtered = [(score, entry) for score, entry in scored if score >= min_score]
+
+    lines = [
+        "## Knowledge Auto Recall Test",
+        "",
+        f"Query: {query}",
+        f"Mode: {'ON' if settings.get('enabled') else 'OFF'}",
+        f"Min Score: {min_score}",
+        f"Matched: {len(filtered)}",
+        "",
+    ]
+
+    if not filtered:
+        lines.append("関連知識は見つかりませんでした。")
+        return "\n".join(lines)
+
+    for score, entry in filtered[:max_results]:
+        trust = {}
+        try:
+            trust = _ka_v1_trust(entry)
+        except Exception:
+            trust = {"score": "unknown", "label": "unknown", "cautions": []}
+
+        preview = str(entry.get("content", "")).replace("\n", " ")
+        if len(preview) > 240:
+            preview = preview[:240].rstrip() + "..."
+
+        lines.append(f"### {entry.get('id')}")
+        lines.append(f"- Recall Score: {score}")
+        lines.append(f"- Category: {entry.get('category')}")
+        lines.append(f"- Source: {entry.get('source')}")
+        lines.append(f"- Trust: {trust.get('score')}/100 ({trust.get('label')})")
+        if trust.get("cautions"):
+            lines.append(f"- Cautions: {', '.join(trust.get('cautions'))}")
+        lines.append(f"- Preview: {preview}")
+        lines.append("")
+
+    lines.append("Note: これは自動参照の候補確認です。まだ通常会話への自動注入は最小限です。")
+
+    return "\n".join(lines).rstrip()
+
+
+_kar_v1_can_handle_base = KnowledgeTool.can_handle
+_kar_v1_execute_base = KnowledgeTool.execute
+
+def _kar_v1_can_handle(self, user_input: str) -> bool:
+    text = user_input.strip()
+    return (
+        _kar_v1_can_handle_base(self, user_input)
+        or text == "知識自動参照設定"
+        or text == "知識自動参照ON"
+        or text == "知識自動参照OFF"
+        or text.startswith("知識自動参照テスト:")
+        or text.startswith("知識自動参照テスト：")
+    )
+
+
+def _kar_v1_execute(self, user_input: str) -> str:
+    text = user_input.strip()
+
+    if text == "知識自動参照設定":
+        return _kar_v1_status()
+
+    if text == "知識自動参照ON":
+        return _kar_v1_on()
+
+    if text == "知識自動参照OFF":
+        return _kar_v1_off()
+
+    if text.startswith(("知識自動参照テスト:", "知識自動参照テスト：")):
+        return _kar_v1_test(self, _kar_v1_sep(text))
+
+    return _kar_v1_execute_base(self, user_input)
+
+
+KnowledgeTool.can_handle = _kar_v1_can_handle
+KnowledgeTool.execute = _kar_v1_execute
