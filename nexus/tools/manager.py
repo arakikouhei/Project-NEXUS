@@ -8,6 +8,8 @@ from nexus.tools.calculator import CalculatorTool
 from nexus.tools.clock import ClockTool
 from nexus.tools.filesystem import FileSystemTool
 from nexus.tools.project import ProjectTool
+from nexus.tools.code import CodeTool
+from nexus.tools.terminal import TerminalTool
 
 
 class ToolManager:
@@ -20,6 +22,8 @@ class ToolManager:
         self.register(CalculatorTool())
         self.register(FileSystemTool())
         self.register(ProjectTool())
+        self.register(CodeTool())
+        self.register(TerminalTool())
 
     def register(self, tool: BaseTool) -> None:
         self.tools.append(tool)
