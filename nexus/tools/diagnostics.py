@@ -689,3 +689,129 @@ if not hasattr(ToolDiagnosticsTool, "_system_health_v2_original_execute"):
         return result
 
     ToolDiagnosticsTool.execute = _system_health_v2_execute
+
+# SYSTEM_HEALTH_V3_PROJECT_OVERVIEW_PATCH
+
+def _system_health_v3_read_json_safe(path_text, default):
+    from pathlib import Path
+    import json
+
+    path = Path(path_text)
+
+    if not path.exists():
+        return default
+
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _system_health_v3_count_tests() -> int:
+    from pathlib import Path
+    import re
+
+    path = Path("scripts/test_major_commands.py")
+
+    if not path.exists():
+        return 0
+
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return len(re.findall(r"CommandTest\(", text))
+
+
+def _system_health_v3_git_identity_note() -> str:
+    import subprocess
+
+    try:
+        name = subprocess.run(
+            ["git", "config", "--get", "user.name"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        ).stdout.strip()
+
+        email = subprocess.run(
+            ["git", "config", "--get", "user.email"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        ).stdout.strip()
+
+        if not name or not email:
+            return "未設定"
+
+        if email.endswith(".local") or "MacBook" in email:
+            return f"要確認: {name} <{email}>"
+
+        return f"OK: {name} <{email}>"
+
+    except Exception:
+        return "unknown"
+
+
+def _system_health_v3_project_overview() -> str:
+    from pathlib import Path
+
+    memory = _system_health_v3_read_json_safe(
+        "data/project/project_memory.json",
+        {},
+    )
+
+    current_stage = memory.get("current_stage", "unknown") if isinstance(memory, dict) else "unknown"
+    next_stage = memory.get("recommended_next_stage", "unknown") if isinstance(memory, dict) else "unknown"
+
+    files = {
+        "v0.5 Plan": Path("docs/V0_5_PLAN.md").exists(),
+        "Safe Refactor v1 Doc": Path("docs/SAFE_REFACTOR_V1.md").exists(),
+        "Major Test Suite": Path("scripts/test_major_commands.py").exists(),
+        "Backup Tool Doc": Path("docs/BACKUP_EXPORT_V1.md").exists(),
+        "Project Memory Data": Path("data/project/project_memory.json").exists(),
+        "Release Snapshot v0.3": Path("docs/RELEASE_SNAPSHOT_V0_3_KNOWLEDGE.md").exists(),
+    }
+
+    test_count = _system_health_v3_count_tests()
+    git_identity = _system_health_v3_git_identity_note()
+
+    lines = [
+        "## v0.5 Project Overview",
+        "",
+        f"- Current Stage: {current_stage}",
+        f"- Recommended Next Stage: {next_stage}",
+        f"- Major Command Tests Registered: {test_count}",
+        f"- Git Identity: {git_identity}",
+        "",
+        "### Key Files",
+        "",
+    ]
+
+    for name, exists in files.items():
+        mark = "OK" if exists else "MISSING"
+        lines.append(f"- {name}: {mark}")
+
+    lines.extend([
+        "",
+        "### v0.5 Notes",
+        "",
+        "- v0.5 focuses on consolidation, health checks, command help updates, and release snapshot.",
+        "- If Git Identity shows 要確認, commits still work, but setting git user.name / user.email later is cleaner.",
+    ])
+
+    return "\n".join(lines)
+
+
+if not hasattr(ToolDiagnosticsTool, "_system_health_v3_original_execute"):
+    ToolDiagnosticsTool._system_health_v3_original_execute = ToolDiagnosticsTool.execute
+
+    def _system_health_v3_execute(self, user_input: str) -> str:
+        result = self._system_health_v3_original_execute(user_input)
+
+        text = user_input.strip()
+
+        if text in {"システム健康診断", "NEXUS状態確認"}:
+            if "## v0.5 Project Overview" not in result:
+                result = result.rstrip() + "\n\n" + _system_health_v3_project_overview()
+
+        return result
+
+    ToolDiagnosticsTool.execute = _system_health_v3_execute
