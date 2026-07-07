@@ -142,6 +142,31 @@ Current boot string is outdated compared to actual roadmap progress.
 5. Version Display Sync v1
 6. Release Snapshot v0.7
 
+
+
+## UI Preparation Progress
+
+UI Preparation v1 has started.
+
+Created document:
+
+- docs/NEXUS_DASHBOARD_PLAN.md
+
+Purpose:
+
+- Define future dedicated NEXUS dashboard direction
+- Prepare clickable command buttons
+- Prepare roadmap / position panel
+- Prepare system health panel
+- Prepare memory, knowledge, file browser, production support, backup, voice, and camera panels
+- Keep actual dashboard implementation for v0.8 or later
+
+Current status:
+
+- Dashboard design document completed
+- No UI code implemented yet
+- Terminal interface remains the current development interface
+
 ## v0.7 Stable Conditions
 
 v0.7 can be considered stable when:
