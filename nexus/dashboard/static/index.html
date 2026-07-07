@@ -127,6 +127,24 @@
       margin-bottom: 12px;
     }
 
+    .production-panel-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .production-panel-button {
+      text-align: center;
+      min-height: 48px;
+    }
+
+    .production-panel-note {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
     .status-label {
       color: #9ca3af;
       font-size: 12px;
@@ -213,6 +231,17 @@
         <button class="file-panel-button" onclick="runCommand('scripts一覧')">scripts</button>
         <button class="file-panel-button" onclick="runCommand('prompts一覧')">prompts</button>
         <button class="file-panel-button" onclick="runCommand('ファイルインデックス')">File Index</button>
+      </div>
+
+      <h2>Production Panel</h2>
+      <div class="production-panel-note">
+        Creative production support. Results appear below.
+      </div>
+      <div class="production-panel-grid">
+        <button class="production-panel-button" onclick="runCommand('制作メモ一覧')">Production Memos</button>
+        <button class="production-panel-button" onclick="runCommand('制作メモ検索: Maya')">Search: Maya</button>
+        <button class="production-panel-button" onclick="runCommand('3DCG作業確認')">3DCG Check</button>
+        <button class="production-panel-button" onclick="runCommand('Maya作業メモ')">Maya Memos</button>
       </div>
 
       <h2>Result</h2>
