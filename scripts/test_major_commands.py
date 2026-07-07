@@ -87,6 +87,36 @@ TESTS = [
         expected="System Health",
     ),
     CommandTest(
+        name="System health v0.5 overview",
+        command="システム健康診断",
+        expected="## v0.5 Project Overview",
+    ),
+    CommandTest(
+        name="Project memory v0.5 stage",
+        command="NEXUS現在地",
+        expected="v0.5 consolidation",
+    ),
+    CommandTest(
+        name="Project memory v0.5 next stage",
+        command="NEXUS現在地",
+        expected="Test Suite v2, then v0.5 Release Snapshot",
+    ),
+    CommandTest(
+        name="Command list v0.5 research help",
+        command="コマンド一覧",
+        expected="研究コマンド",
+    ),
+    CommandTest(
+        name="Command list v0.5 import help",
+        command="コマンド一覧",
+        expected="インポートコマンド",
+    ),
+    CommandTest(
+        name="Command list v0.5 project memory help",
+        command="コマンド一覧",
+        expected="NEXUS記憶コマンド",
+    ),
+    CommandTest(
         name="Feature list",
         command="機能一覧",
         expected="Feature List",
@@ -134,7 +164,7 @@ TESTS = [
     CommandTest(
         name="Project memory current stage",
         command="NEXUS現在地",
-        expected="v0.4 active",
+        expected="v0.5 consolidation",
     ),
     CommandTest(
         name="Project memory overview",
