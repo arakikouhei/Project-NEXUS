@@ -1,0 +1,17 @@
+[
+  {
+    "id": "work-10056317",
+    "content": "v0.6では作業メモ機能を追加した。将来UIや音声カメラ連携にも使う。",
+    "summary": "v0.6では作業メモ機能を追加した。将来UIや音声カメラ連携にも使う。",
+    "tags": [
+      "work_note",
+      "ui",
+      "voice",
+      "camera"
+    ],
+    "digest": "1005631765fc5bd3f8f0976bdafbb1c4a0a9c7d557c98d20f486f98c1c9ec4c0",
+    "created_at": "2026-07-07T22:51:53",
+    "updated_at": "2026-07-07T22:51:53",
+    "archived": false
+  }
+]

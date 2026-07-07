@@ -87,6 +87,21 @@ TESTS = [
         expected="System Health",
     ),
     CommandTest(
+        name="Work notes help",
+        command="作業メモヘルプ",
+        expected="## Work Notes Help",
+    ),
+    CommandTest(
+        name="Work notes list",
+        command="作業メモ一覧",
+        expected="## Work Notes",
+    ),
+    CommandTest(
+        name="Work notes search",
+        command="作業メモ検索: UI 音声 カメラ",
+        expected="work-10056317",
+    ),
+    CommandTest(
         name="Memory index overview",
         command="記憶インデックス",
         expected="## NEXUS Memory Index",

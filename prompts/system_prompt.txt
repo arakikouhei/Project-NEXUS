@@ -1000,3 +1000,21 @@ NEXUSはProject Memoryの状態を日時付きで保存できます。
 - 自動復元はまだしない
 - 復元候補を表示するだけ
 - 削除はしない
+
+
+# Personal Work Notes v1
+
+NEXUSは個人の作業メモを保存・一覧・検索・詳細表示できます。
+
+使える例:
+- 作業メモヘルプ
+- 作業メモ追加: text
+- 作業メモ一覧
+- 作業メモ検索: query
+- 作業メモ詳細: memo-id
+
+方針:
+- data/work_notes/work_notes.json に保存する
+- Knowledge Coreとは分けて保存する
+- 削除はしない
+- 将来的に作業メモ知識化へつなげる
