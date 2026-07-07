@@ -102,6 +102,26 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="Memory review overview",
+        command="記憶レビュー",
+        expected="## Memory Review",
+    ),
+    CommandTest(
+        name="Old memory candidates",
+        command="古い記憶候補",
+        expected="## Old Memory Candidates",
+    ),
+    CommandTest(
+        name="Duplicate memory candidates",
+        command="重複記憶候補",
+        expected="## Duplicate Memory Candidates",
+    ),
+    CommandTest(
+        name="Memory safety check",
+        command="記憶安全確認",
+        expected="## Memory Safety Check",
+    ),
+    CommandTest(
         name="Memory index overview",
         command="記憶インデックス",
         expected="## NEXUS Memory Index",

@@ -24,6 +24,7 @@ from nexus.tools.knowledge_import import KnowledgeImportTool
 from nexus.tools.research_workflow import ResearchWorkflowTool
 from nexus.tools.memory_index import MemoryIndexTool
 from nexus.tools.work_notes import WorkNotesTool
+from nexus.tools.memory_review import MemoryReviewTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
@@ -68,6 +69,7 @@ class ToolManager:
         self.register(ResearchWorkflowTool())
         self.register(MemoryIndexTool())
         self.register(WorkNotesTool())
+        self.register(MemoryReviewTool())
         self.register(TransferTool())
         self.register(SafeSearchTool())
         self.register(SafeResearchTool())
