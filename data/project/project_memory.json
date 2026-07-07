@@ -1,6 +1,6 @@
 {
   "project_name": "Project NEXUS",
-  "current_stage": "v0.7 file / production support / UI prep completed",
+  "current_stage": "v0.8 dashboard / interaction layer completed",
   "status": "stable",
   "latest_confirmed_state": {
     "git_clean": true,
@@ -69,6 +69,12 @@
       "status": "completed",
       "summary": "File Index v1, File Preview v1, UI Preparation v1, Production Support v1, Version Display Sync v1, and Release Snapshot v0.7 completed. Test Suite PASS 74 / FAIL 0.",
       "created_at": "2026-07-08T00:20:14"
+    },
+    {
+      "name": "v0.8 Release Snapshot",
+      "status": "completed",
+      "summary": "Dashboard Backend v1, Frontend v1, Status Panel v1, File Panel v1, Production Panel v1, Launch Command v1, and Release Snapshot v0.8 completed. Test Suite PASS 77 / FAIL 0.",
+      "created_at": "2026-07-08T01:10:03"
     }
   ],
   "important_commands": [
@@ -79,7 +85,7 @@
     "NEXUSバックアップ",
     "python3 scripts/test_major_commands.py"
   ],
-  "recommended_next_stage": "v0.8 planning, then dashboard prototype",
+  "recommended_next_stage": "v0.9 planning / stabilization",
   "recommended_next_options": [
     "Knowledge Import v1",
     "Research Workflow v1",
@@ -93,5 +99,5 @@
     "Auto Recallは通常OFF",
     "Archive Filterは通常アーカイブ除外"
   ],
-  "updated_at": "2026-07-08T00:20:14"
+  "updated_at": "2026-07-08T01:10:03"
 }
