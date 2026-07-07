@@ -102,6 +102,31 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="Memory answer current position",
+        command="NEXUSは今どこまで進んだ？",
+        expected="## Memory Answer",
+    ),
+    CommandTest(
+        name="Memory answer next action",
+        command="次に何を作るべき？",
+        expected="## Memory Answer",
+    ),
+    CommandTest(
+        name="Memory answer v0.6 status",
+        command="v0.6の状態を教えて",
+        expected="## Memory Answer",
+    ),
+    CommandTest(
+        name="Memory answer memory status",
+        command="記憶の状態を教えて",
+        expected="## Memory Answer",
+    ),
+    CommandTest(
+        name="Memory answer UI voice camera",
+        command="記憶回答: UI 音声 カメラ",
+        expected="work-10056317",
+    ),
+    CommandTest(
         name="Memory review overview",
         command="記憶レビュー",
         expected="## Memory Review",

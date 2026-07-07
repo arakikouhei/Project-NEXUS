@@ -1035,3 +1035,20 @@ NEXUSは記憶データを削除なしでレビューできます。
 - 自動修正しない
 - 候補表示だけ
 - knowledge / work notes / project memory を確認する
+
+
+# Memory Answer v1
+
+NEXUSはProject Memory / Knowledge Core / Work Notesを使って記憶回答できます。
+
+使える例:
+- 記憶回答: question
+- NEXUSは今どこまで進んだ？
+- 次に何を作るべき？
+- v0.6の状態を教えて
+- 記憶の状態を教えて
+
+方針:
+- 記憶を削除しない
+- 推測しすぎない
+- Project Memory / Knowledge / Work Notes を根拠として答える
