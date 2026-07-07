@@ -33,6 +33,9 @@ class ProjectMemoryTool(BaseTool):
                 "NEXUS現在地",
                 "NEXUSマイルストーン",
                 "NEXUS記憶保存状況",
+                "NEXUS記憶スナップショット",
+                "NEXUS記憶履歴",
+                "NEXUS記憶復元候補",
             }
             or text.startswith("NEXUS現在地更新:")
             or text.startswith("NEXUS次段階更新:")
@@ -57,6 +60,15 @@ class ProjectMemoryTool(BaseTool):
 
         if text == "NEXUS記憶保存状況":
             return self._memory_save_status()
+
+        if text == "NEXUS記憶スナップショット":
+            return self._create_memory_snapshot()
+
+        if text == "NEXUS記憶履歴":
+            return self._memory_snapshot_history()
+
+        if text == "NEXUS記憶復元候補":
+            return self._memory_restore_candidates()
 
         if text.startswith("NEXUS現在地更新:"):
             value = text.split(":", 1)[1].strip()
@@ -374,3 +386,114 @@ class ProjectMemoryTool(BaseTool):
             lines.append("- なし")
 
         return "\n".join(lines)
+
+# PROJECT_MEMORY_SNAPSHOT_V1
+
+    def _create_memory_snapshot(self) -> str:
+        source = self.MEMORY_PATH
+
+        if not source.exists():
+            return "## Project Memory Snapshot Failed\n\n- Reason: project_memory.json が見つかりません。"
+
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        snapshot_dir = Path("data/project/snapshots")
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
+
+        snapshot_path = snapshot_dir / f"project_memory_snapshot_{stamp}.json"
+        snapshot_path.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+        data = self._load_memory()
+
+        summary_path = snapshot_dir / f"project_memory_snapshot_{stamp}.md"
+        summary_path.write_text(
+            "\n".join([
+                "# Project Memory Snapshot",
+                "",
+                f"- Created At: {datetime.now().isoformat(timespec='seconds')}",
+                f"- Source: {source}",
+                f"- Snapshot: {snapshot_path}",
+                f"- Current Stage: {data.get('current_stage', 'unknown')}",
+                f"- Recommended Next Stage: {data.get('recommended_next_stage', 'unknown')}",
+                f"- Status: {data.get('status', 'unknown')}",
+                "",
+            ]),
+            encoding="utf-8",
+        )
+
+        return f"""## Project Memory Snapshot Created
+
+- Snapshot JSON: {snapshot_path}
+- Summary: {summary_path}
+- Current Stage: {data.get('current_stage', 'unknown')}
+- Recommended Next Stage: {data.get('recommended_next_stage', 'unknown')}
+
+確認:
+- NEXUS記憶履歴
+- NEXUS記憶復元候補
+"""
+
+    def _memory_snapshot_history(self) -> str:
+        snapshot_dir = Path("data/project/snapshots")
+
+        lines = [
+            "## Project Memory Snapshot History",
+            "",
+        ]
+
+        if not snapshot_dir.exists():
+            lines.append("- スナップショットはまだありません。")
+            return "\n".join(lines)
+
+        items = sorted(
+            snapshot_dir.glob("project_memory_snapshot_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+
+        if not items:
+            lines.append("- スナップショットはまだありません。")
+            return "\n".join(lines)
+
+        for item in items[:20]:
+            size = item.stat().st_size
+            lines.append(f"- {item} ({size} bytes)")
+
+        return "\n".join(lines)
+
+    def _memory_restore_candidates(self) -> str:
+        snapshot_dir = Path("data/project/snapshots")
+
+        lines = [
+            "## Project Memory Restore Candidates",
+            "",
+            "v1では自動復元はしません。候補の確認だけです。",
+            "",
+        ]
+
+        if not snapshot_dir.exists():
+            lines.append("- 候補はありません。")
+            return "\n".join(lines)
+
+        items = sorted(
+            snapshot_dir.glob("project_memory_snapshot_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+
+        if not items:
+            lines.append("- 候補はありません。")
+            return "\n".join(lines)
+
+        for item in items[:10]:
+            try:
+                data = json.loads(item.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+
+            lines.append(f"### {item.name}")
+            lines.append(f"- Path: {item}")
+            lines.append(f"- Current Stage: {data.get('current_stage', 'unknown') if isinstance(data, dict) else 'unknown'}")
+            lines.append(f"- Recommended Next Stage: {data.get('recommended_next_stage', 'unknown') if isinstance(data, dict) else 'unknown'}")
+            lines.append("")
+
+        return "\n".join(lines).rstrip()

@@ -1,0 +1,85 @@
+{
+  "project_name": "Project NEXUS",
+  "current_stage": "v0.5 consolidation",
+  "status": "stable",
+  "latest_confirmed_state": {
+    "git_clean": true,
+    "python_compile_errors": 0,
+    "features_detected": "12/12",
+    "auto_recall_enabled": false,
+    "archive_filter_include_archived": false
+  },
+  "major_milestones": [
+    {
+      "name": "Knowledge Foundation",
+      "status": "completed",
+      "summary": "Knowledge Core, Source Registry, World Update, Paper Intake, Knowledge Search, Digest, Cleanup, Trust, Answer, Auto Recall foundation completed."
+    },
+    {
+      "name": "Release Snapshot",
+      "status": "completed",
+      "summary": "Knowledge foundation release snapshot saved in docs."
+    },
+    {
+      "name": "Backup / Export",
+      "status": "completed",
+      "summary": "Local backups and knowledge exports are available."
+    },
+    {
+      "name": "Command Help",
+      "status": "completed",
+      "summary": "Grouped command help is available inside NEXUS."
+    },
+    {
+      "name": "Major Command Test Suite",
+      "status": "completed",
+      "summary": "Major command tests pass with PASS 15 / FAIL 0."
+    },
+    {
+      "name": "System Health v2",
+      "status": "completed",
+      "summary": "System Health now shows Recommended Fixes."
+    },
+    {
+      "name": "Project Memory v2",
+      "status": "completed",
+      "summary": "Project memory can now update current stage, next stage, and milestones safely.",
+      "created_at": "2026-07-04T22:37:05"
+    },
+    {
+      "name": "Safe Refactor Project Memory",
+      "status": "completed",
+      "summary": "Project Memory v2 patch was integrated into the class safely.",
+      "created_at": "2026-07-04T22:46:23"
+    },
+    {
+      "name": "Command Help v2",
+      "status": "completed",
+      "summary": "Command help was updated for v0.5 with research, import, project memory, and development commands.",
+      "created_at": "2026-07-07T22:25:11"
+    }
+  ],
+  "important_commands": [
+    "システム健康診断",
+    "コマンド一覧",
+    "おすすめ次操作",
+    "知識エクスポート",
+    "NEXUSバックアップ",
+    "python3 scripts/test_major_commands.py"
+  ],
+  "recommended_next_stage": "Test Suite v2, then v0.5 Release Snapshot",
+  "recommended_next_options": [
+    "Knowledge Import v1",
+    "Research Workflow v1",
+    "Safe Refactor v1",
+    "Project Memory v2"
+  ],
+  "safety_policy": [
+    "大きな改造前に知識エクスポートまたはNEXUSバックアップを実行する",
+    "変更後はpython compileとmajor command testsを実行する",
+    "問題なければgit commitしてpushする",
+    "Auto Recallは通常OFF",
+    "Archive Filterは通常アーカイブ除外"
+  ],
+  "updated_at": "2026-07-07T22:25:11"
+}

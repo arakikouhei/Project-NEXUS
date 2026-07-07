@@ -984,3 +984,19 @@ NEXUSは記憶系データの全体像を確認できます。
 - 記憶を削除しない
 - project memory / knowledge / research / imported notes / release docs の全体像を見る
 - v0.6の記憶システム強化の基礎にする
+
+
+# Project Memory Snapshot v1
+
+NEXUSはProject Memoryの状態を日時付きで保存できます。
+
+使える例:
+- NEXUS記憶スナップショット
+- NEXUS記憶履歴
+- NEXUS記憶復元候補
+
+方針:
+- data/project/project_memory.json をスナップショットとして保存する
+- 自動復元はまだしない
+- 復元候補を表示するだけ
+- 削除はしない

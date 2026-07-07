@@ -182,6 +182,21 @@ TESTS = [
         expected="## Project Memory Save Status",
     ),
     CommandTest(
+        name="Project memory snapshot create",
+        command="NEXUS記憶スナップショット",
+        expected="## Project Memory Snapshot Created",
+    ),
+    CommandTest(
+        name="Project memory snapshot history",
+        command="NEXUS記憶履歴",
+        expected="## Project Memory Snapshot History",
+    ),
+    CommandTest(
+        name="Project memory restore candidates",
+        command="NEXUS記憶復元候補",
+        expected="## Project Memory Restore Candidates",
+    ),
+    CommandTest(
         name="Project memory current stage",
         command="NEXUS現在地",
         expected="v0.5 consolidation",
