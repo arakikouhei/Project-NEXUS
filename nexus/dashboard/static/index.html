@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Project NEXUS Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      margin: 0;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    header {
+      padding: 20px;
+      background: #1f2937;
+      border-bottom: 1px solid #374151;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .panel {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    button {
+      width: 100%;
+      margin: 4px 0;
+      padding: 10px 12px;
+      border: 1px solid #4b5563;
+      border-radius: 8px;
+      background: #374151;
+      color: #f9fafb;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #4b5563;
+    }
+
+    .status {
+      color: #a7f3d0;
+      font-size: 13px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .result-title {
+      margin-bottom: 8px;
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #030712;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 520px;
+      overflow: auto;
+      line-height: 1.5;
+    }
+
+    .small {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Project NEXUS Dashboard</h1>
+    <div class="subtitle">v0.8 Dashboard Frontend v1 / Safe local prototype</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Command Buttons</h2>
+      <div id="status" class="status">Loading backend status...</div>
+
+      <button onclick="runCommand('NEXUS現在地')">NEXUS現在地</button>
+      <button onclick="runCommand('NEXUS開発状況')">NEXUS開発状況</button>
+      <button onclick="runCommand('システム健康診断')">システム健康診断</button>
+      <button onclick="runCommand('コマンド一覧')">コマンド一覧</button>
+      <button onclick="runCommand('おすすめ次操作')">おすすめ次操作</button>
+
+      <h2>Memory</h2>
+      <button onclick="runCommand('記憶インデックス')">記憶インデックス</button>
+      <button onclick="runCommand('記憶の状態を教えて')">記憶の状態を教えて</button>
+      <button onclick="runCommand('記憶レビュー')">記憶レビュー</button>
+
+      <h2>Files</h2>
+      <button onclick="runCommand('ファイルインデックス')">ファイルインデックス</button>
+      <button onclick="runCommand('重要ファイル一覧')">重要ファイル一覧</button>
+      <button onclick="runCommand('docs一覧')">docs一覧</button>
+      <button onclick="runCommand('tools一覧')">tools一覧</button>
+      <button onclick="runCommand('scripts一覧')">scripts一覧</button>
+      <button onclick="runCommand('prompts一覧')">prompts一覧</button>
+
+      <h2>Production</h2>
+      <button onclick="runCommand('制作メモ一覧')">制作メモ一覧</button>
+      <button onclick="runCommand('制作メモ検索: Maya')">制作メモ検索: Maya</button>
+      <button onclick="runCommand('3DCG作業確認')">3DCG作業確認</button>
+      <button onclick="runCommand('Maya作業メモ')">Maya作業メモ</button>
+
+      <div class="small">
+        Safety: fixed safe commands only. No shell execution. No delete/edit actions.
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Result</h2>
+      <div id="result-title" class="result-title">No command yet.</div>
+      <pre id="result">Click a command button.</pre>
+    </section>
+  </main>
+
+  <script>
+    async function loadStatus() {
+      const statusEl = document.getElementById("status");
+      try {
+        const response = await fetch("/api/status");
+        const data = await response.json();
+        statusEl.textContent =
+          "Backend: running\n" +
+          "Safe commands: " + data.safe_command_count;
+      } catch (error) {
+        statusEl.textContent = "Backend status failed: " + error;
+      }
+    }
+
+    async function runCommand(command) {
+      const titleEl = document.getElementById("result-title");
+      const resultEl = document.getElementById("result");
+
+      titleEl.textContent = "Running: " + command;
+      resultEl.textContent = "Loading...";
+
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({command})
+        });
+
+        const data = await response.json();
+
+        if (!data.ok) {
+          titleEl.textContent = "Blocked or failed: " + command;
+          resultEl.textContent = data.error || "Unknown error";
+          return;
+        }
+
+        titleEl.textContent = "Result: " + command;
+        resultEl.textContent = data.result || "(empty result)";
+      } catch (error) {
+        titleEl.textContent = "Request failed";
+        resultEl.textContent = String(error);
+      }
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>

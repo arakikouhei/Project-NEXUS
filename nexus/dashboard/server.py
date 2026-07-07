@@ -1,6 +1,7 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Dict
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from nexus.agent.agent import NexusAgent
@@ -8,6 +9,7 @@ from nexus.agent.agent import NexusAgent
 
 HOST = "127.0.0.1"
 PORT = 8765
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 SAFE_COMMANDS = {
@@ -88,7 +90,11 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
 
         if parsed.path == "/":
-            self._send_text(self._index_html(), content_type="text/html; charset=utf-8")
+            index_path = STATIC_DIR / "index.html"
+            if index_path.exists():
+                self._send_text(index_path.read_text(encoding="utf-8"), content_type="text/html; charset=utf-8")
+            else:
+                self._send_text(self._index_html(), content_type="text/html; charset=utf-8")
             return
 
         if parsed.path == "/api/status":
