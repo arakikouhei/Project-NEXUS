@@ -102,6 +102,41 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="Production support help",
+        command="制作メモヘルプ",
+        expected="## Production Support",
+    ),
+    CommandTest(
+        name="Production support list",
+        command="制作メモ一覧",
+        expected="## Production Support",
+    ),
+    CommandTest(
+        name="Production support search Maya",
+        command="制作メモ検索: Maya",
+        expected="## Production Support",
+    ),
+    CommandTest(
+        name="Production support search none",
+        command="制作メモ検索: no_such_production_note_999",
+        expected="No matching production memos found",
+    ),
+    CommandTest(
+        name="Production support detail missing",
+        command="制作メモ詳細: prod-notfound",
+        expected="Production memo not found",
+    ),
+    CommandTest(
+        name="Production support 3DCG check",
+        command="3DCG作業確認",
+        expected="## Production Support",
+    ),
+    CommandTest(
+        name="Production support Maya notes",
+        command="Maya作業メモ",
+        expected="## Production Support",
+    ),
+    CommandTest(
         name="File preview docs plan",
         command="ファイル確認: docs/V0_7_PLAN.md",
         expected="## File Preview",

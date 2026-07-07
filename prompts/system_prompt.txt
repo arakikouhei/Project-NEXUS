@@ -1087,3 +1087,22 @@ Safety:
 - No file edits
 - No file deletion
 - Blocks backups, git files, cache folders, parent traversal, and unsafe suffixes
+
+
+# Production Support v1
+
+NEXUS can support creative production notes.
+
+Commands:
+- 制作メモヘルプ
+- 制作メモ追加: text
+- 制作メモ一覧
+- 制作メモ検索: query
+- 制作メモ詳細: memo-id
+- 3DCG作業確認
+- Maya作業メモ
+
+Purpose:
+- Track creative production work
+- Track 3DCG / Maya work
+- Prepare for future production dashboard panels
