@@ -1071,3 +1071,19 @@ Safety:
 - Read-only
 - No file edits
 - No file deletion
+
+
+# File Preview v1
+
+NEXUS can safely preview allowed text files.
+
+Commands:
+- ファイル確認: path
+- docs確認: filename
+- 設定確認: path
+
+Safety:
+- Read-only
+- No file edits
+- No file deletion
+- Blocks backups, git files, cache folders, parent traversal, and unsafe suffixes

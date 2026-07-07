@@ -102,6 +102,31 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="File preview docs plan",
+        command="ファイル確認: docs/V0_7_PLAN.md",
+        expected="## File Preview",
+    ),
+    CommandTest(
+        name="File preview docs shortcut",
+        command="docs確認: V0_7_PLAN.md",
+        expected="## File Preview",
+    ),
+    CommandTest(
+        name="File preview prompt",
+        command="設定確認: prompts/system_prompt.txt",
+        expected="## File Preview",
+    ),
+    CommandTest(
+        name="File preview blocked backup",
+        command="ファイル確認: backups/test.md",
+        expected="Blocked path part",
+    ),
+    CommandTest(
+        name="File preview blocked parent traversal",
+        command="ファイル確認: ../secret.txt",
+        expected="Parent directory traversal is blocked",
+    ),
+    CommandTest(
         name="File index overview",
         command="ファイルインデックス",
         expected="## File Index",
