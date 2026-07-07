@@ -32,6 +32,26 @@ TESTS = [
         expected="## NEXUS Command List",
     ),
     CommandTest(
+        name="Command help research commands",
+        command="研究コマンド",
+        expected="## Research Workflow Commands",
+    ),
+    CommandTest(
+        name="Command help import commands",
+        command="インポートコマンド",
+        expected="## Import Commands",
+    ),
+    CommandTest(
+        name="Command help project memory commands",
+        command="NEXUS記憶コマンド",
+        expected="## NEXUS Project Memory Commands",
+    ),
+    CommandTest(
+        name="Command help development commands",
+        command="開発コマンド",
+        expected="## Development / Maintenance Commands",
+    ),
+    CommandTest(
         name="Knowledge commands",
         command="知識コマンド",
         expected="## Knowledge Commands",

@@ -1,8 +1,9 @@
 """
 Project NEXUS
-Command Help Tool v1
+Command Help Tool v2
 
 Shows grouped command help for Project NEXUS.
+Updated for v0.4 / v0.5 commands.
 """
 
 from __future__ import annotations
@@ -26,6 +27,10 @@ class CommandHelpTool(BaseTool):
             "更新コマンド",
             "バックアップコマンド",
             "診断コマンド",
+            "研究コマンド",
+            "インポートコマンド",
+            "NEXUS記憶コマンド",
+            "開発コマンド",
             "おすすめ次操作",
         }
 
@@ -49,6 +54,18 @@ class CommandHelpTool(BaseTool):
 
         if text == "診断コマンド":
             return self._diagnostic_commands()
+
+        if text == "研究コマンド":
+            return self._research_commands()
+
+        if text == "インポートコマンド":
+            return self._import_commands()
+
+        if text == "NEXUS記憶コマンド":
+            return self._project_memory_commands()
+
+        if text == "開発コマンド":
+            return self._development_commands()
 
         if text == "おすすめ次操作":
             return self._recommended_next_actions()
@@ -74,11 +91,24 @@ class CommandHelpTool(BaseTool):
 - 知識回答: question
 - 知識ダイジェスト
 
+### インポート
+- インポートコマンド
+- インポート確認: path
+- 知識インポート: path
+- メモ取り込み: path
+
 ### 論文
 - 論文コマンド
 - 論文検索: computer graphics
 - 論文保存: arXiv ID
 - 論文一覧
+
+### 研究ワークフロー
+- 研究コマンド
+- 研究ワークフロー開始: topic
+- 論文ワークフロー: topic
+- 論文から知識化: papers-id
+- 研究まとめ: topic
 
 ### 更新情報
 - 更新コマンド
@@ -91,6 +121,19 @@ class CommandHelpTool(BaseTool):
 - 知識エクスポート
 - NEXUSバックアップ
 - バックアップ一覧
+
+### NEXUS記憶
+- NEXUS記憶コマンド
+- NEXUS記憶
+- NEXUS現在地
+- NEXUSマイルストーン
+- NEXUS記憶保存状況
+
+### 開発・保守
+- 開発コマンド
+- python3 scripts/test_major_commands.py
+- ツール衝突チェック
+- git状態
 
 ### 次に迷ったら
 - おすすめ次操作
@@ -116,6 +159,15 @@ class CommandHelpTool(BaseTool):
 - 知識回答: PointDiTは何の論文？
 - 知識回答: diffusionとは？
 - 知識回答: MayaのUVとは？
+
+### インポート
+- インポート確認: path
+- 知識インポート: path
+- メモ取り込み: path
+
+### 研究化
+- 論文から知識化: papers-id
+- 研究まとめ: topic
 
 ### 整理
 - 知識ダイジェスト
@@ -165,6 +217,12 @@ class CommandHelpTool(BaseTool):
 - 論文キーワード抽出: papers-xxxxxxxx
 - 論文3行まとめ: papers-xxxxxxxx
 - 論文安全評価: papers-xxxxxxxx
+
+### 研究ワークフロー
+- 研究ワークフロー開始: topic
+- 論文ワークフロー: topic
+- 論文から知識化: papers-id
+- 研究まとめ: topic
 
 注意:
 - v1/v2ではメタ情報とAbstract中心です。
@@ -220,6 +278,10 @@ class CommandHelpTool(BaseTool):
 - 削除しません。
 - 元データを書き換えません。
 - Gitとは別のローカル保険です。
+
+おすすめ:
+- 大きい改造前: NEXUSバックアップ
+- 知識だけ守る: 知識エクスポート
 """
 
     def _diagnostic_commands(self) -> str:
@@ -231,6 +293,13 @@ class CommandHelpTool(BaseTool):
 - 機能一覧
 - 設定一覧
 
+### System Health v3
+- v0.5 Project Overview を表示
+- Project Memory の現在地を確認
+- Major Command Test 件数を確認
+- v0.5 Plan / Safe Refactor docs を確認
+- Git identity 状態を確認
+
 ### ツール診断
 - ツール順序
 - ツール衝突チェック
@@ -239,11 +308,115 @@ class CommandHelpTool(BaseTool):
 ### Git / テスト
 - git状態
 - テスト実行
+- python3 scripts/test_major_commands.py
 
 おすすめ:
 - 大きい作業前: システム健康診断
 - コマンド追加後: ツール衝突チェック
 - 保存前: git状態
+"""
+
+    def _research_commands(self) -> str:
+        return """## Research Workflow Commands
+
+### 開始
+- 研究ワークフロー開始: topic
+- 論文ワークフロー: topic
+
+### 論文から知識へ
+- 論文から知識化: papers-id
+
+### まとめ
+- 研究まとめ: topic
+- 知識横断検索: topic
+- 知識まとめ: topic
+
+基本の流れ:
+1. 研究ワークフロー開始: topic
+2. 論文検索: topic
+3. 論文保存: arXiv ID
+4. 論文3行まとめ: papers-id
+5. 論文から知識化: papers-id
+6. 研究まとめ: topic
+"""
+
+    def _import_commands(self) -> str:
+        return """## Import Commands
+
+### ローカルメモ取り込み
+- インポート確認: path
+- 知識インポート: path
+- メモ取り込み: path
+
+対応形式:
+- .txt
+- .md
+- .markdown
+
+制限:
+- v1では300KB以下
+- 元ファイルは削除しません
+- source_path と digest を保存します
+- 同じdigestまたはsource_pathは重複扱いになります
+
+おすすめ順:
+1. インポート確認: path
+2. 知識インポート: path
+3. 知識検索: title
+"""
+
+    def _project_memory_commands(self) -> str:
+        return """## NEXUS Project Memory Commands
+
+### 確認
+- NEXUS記憶
+- NEXUS開発状況
+- NEXUS現在地
+- NEXUSマイルストーン
+- NEXUS記憶保存状況
+
+### 更新
+- NEXUS現在地更新: text
+- NEXUS次段階更新: text
+- NEXUSマイルストーン追加: name | summary
+
+保存先:
+- data/project/project_memory.json
+
+安全:
+- 更新前に backups/project_memory_auto/ へ自動バックアップ
+- マイルストーンは追記のみ
+- 削除はしません
+"""
+
+    def _development_commands(self) -> str:
+        return """## Development / Maintenance Commands
+
+### テスト
+- python3 scripts/test_major_commands.py
+- ツール衝突チェック
+- システム健康診断
+
+### Git
+- git状態
+- コミットして: message
+
+### ドキュメント
+- docs/V0_5_PLAN.md
+- docs/SAFE_REFACTOR_V1.md
+- docs/SYSTEM_HEALTH_V3.md
+
+### 現在の安定確認
+- Major Command Tests: 26件
+- System Health v3
+- v0.5 Plan
+- Safe Refactor v1 completed
+
+大きな変更前:
+1. 知識エクスポート
+2. NEXUSバックアップ
+3. システム健康診断
+4. python3 scripts/test_major_commands.py
 """
 
     def _recommended_next_actions(self) -> str:
@@ -261,10 +434,16 @@ class CommandHelpTool(BaseTool):
 2. 知識回答: question
 3. 知識信頼度確認: query
 
-### 論文を増やす
-1. 論文検索: computer graphics
-2. 論文保存: arXiv ID
-3. 論文3行まとめ: papers-id
+### メモを取り込む
+1. インポート確認: path
+2. 知識インポート: path
+3. 知識検索: title
+
+### 論文・研究を進める
+1. 研究ワークフロー開始: topic
+2. 論文検索: topic
+3. 論文から知識化: papers-id
+4. 研究まとめ: topic
 
 ### ニュースを入れる
 1. AIニュース更新
@@ -276,8 +455,8 @@ class CommandHelpTool(BaseTool):
 2. 知識重複チェック
 3. 知識アーカイブ候補
 
-### 大きな改造前
-1. 知識エクスポート
-2. NEXUSバックアップ
-3. システム健康診断
+### 開発を進める
+1. システム健康診断
+2. python3 scripts/test_major_commands.py
+3. NEXUSバックアップ
 """
