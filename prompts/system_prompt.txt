@@ -1106,3 +1106,21 @@ Purpose:
 - Track creative production work
 - Track 3DCG / Maya work
 - Prepare for future production dashboard panels
+
+
+# Dashboard Launch Command v1
+
+NEXUS can explain how to launch the local dashboard.
+
+Commands:
+- NEXUSダッシュボード
+- NEXUSダッシュボード起動方法
+- ダッシュボード起動方法
+
+Launch:
+- python3 -m nexus.dashboard.server
+- http://127.0.0.1:8765
+- Ctrl+C to stop
+
+Cost:
+- Starting the local dashboard itself does not cost money.

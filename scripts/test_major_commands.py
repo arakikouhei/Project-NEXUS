@@ -102,6 +102,21 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="Dashboard launch guide",
+        command="NEXUSダッシュボード",
+        expected="Project NEXUS dashboard launch guide",
+    ),
+    CommandTest(
+        name="Dashboard launch method",
+        command="NEXUSダッシュボード起動方法",
+        expected="python3 -m nexus.dashboard.server",
+    ),
+    CommandTest(
+        name="Dashboard launch cost note",
+        command="ダッシュボード起動方法",
+        expected="does not cost money",
+    ),
+    CommandTest(
         name="Production support help",
         command="制作メモヘルプ",
         expected="## Production Support",
