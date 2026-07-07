@@ -267,14 +267,14 @@ TESTS = [
         expected="## v0.5 Project Overview",
     ),
     CommandTest(
-        name="Project memory v0.6 stage",
+        name="Project memory v0.7 stage",
         command="NEXUS現在地",
-        expected="v0.6 memory strengthening",
+        expected="v0.7 file / production support / UI prep completed",
     ),
     CommandTest(
-        name="Project memory v0.6 next stage",
+        name="Project memory v0.8 next stage",
         command="NEXUS現在地",
-        expected="v0.6 Release Snapshot, then v0.7 planning",
+        expected="v0.8 planning, then dashboard prototype",
     ),
     CommandTest(
         name="Command list v0.5 research help",
@@ -354,7 +354,7 @@ TESTS = [
     CommandTest(
         name="Project memory current stage",
         command="NEXUS現在地",
-        expected="v0.6 memory strengthening",
+        expected="v0.7 file / production support / UI prep completed",
     ),
     CommandTest(
         name="Project memory overview",
