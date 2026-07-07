@@ -109,6 +109,24 @@
       padding: 12px;
     }
 
+    .file-panel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .file-panel-button {
+      text-align: center;
+      min-height: 48px;
+    }
+
+    .file-panel-note {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
     .status-label {
       color: #9ca3af;
       font-size: 12px;
@@ -182,6 +200,19 @@
           <div class="status-label">Backend</div>
           <div id="backend-state" class="status-value">Loading...</div>
         </div>
+      </div>
+
+      <h2>File Panel</h2>
+      <div class="file-panel-note">
+        Read-only project file navigation. Results appear below.
+      </div>
+      <div class="file-panel-grid">
+        <button class="file-panel-button" onclick="runCommand('重要ファイル一覧')">Important Files</button>
+        <button class="file-panel-button" onclick="runCommand('docs一覧')">docs</button>
+        <button class="file-panel-button" onclick="runCommand('tools一覧')">tools</button>
+        <button class="file-panel-button" onclick="runCommand('scripts一覧')">scripts</button>
+        <button class="file-panel-button" onclick="runCommand('prompts一覧')">prompts</button>
+        <button class="file-panel-button" onclick="runCommand('ファイルインデックス')">File Index</button>
       </div>
 
       <h2>Result</h2>
