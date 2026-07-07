@@ -15,6 +15,7 @@ class NexusCore:
     def __init__(self) -> None:
         self.project_name = settings.PROJECT_NAME
         self.version = settings.VERSION
+        self.roadmap_stage = settings.ROADMAP_STAGE
         self.status = "OFFLINE"
 
         # ここで1つだけ生成する
@@ -32,6 +33,7 @@ class NexusCore:
         print(self.project_name)
         print("NEXUS Core")
         print(f"Version: {self.version}")
+        print(f"Roadmap Stage: {self.roadmap_stage}")
         print(f"Status: {self.status}")
         print("===================================")
 
