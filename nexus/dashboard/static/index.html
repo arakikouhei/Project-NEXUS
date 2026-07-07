@@ -94,6 +94,32 @@
       font-size: 12px;
       margin-top: 12px;
     }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .status-card {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .status-label {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .status-value {
+      color: #f9fafb;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -138,6 +164,26 @@
     </section>
 
     <section class="panel">
+      <h2>Status Panel</h2>
+      <div class="status-grid">
+        <div class="status-card">
+          <div class="status-label">Project Version</div>
+          <div id="project-version" class="status-value">Loading...</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Roadmap Stage</div>
+          <div id="roadmap-stage" class="status-value">Loading...</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Safe Commands</div>
+          <div id="safe-command-count" class="status-value">Loading...</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Backend</div>
+          <div id="backend-state" class="status-value">Loading...</div>
+        </div>
+      </div>
+
       <h2>Result</h2>
       <div id="result-title" class="result-title">No command yet.</div>
       <pre id="result">Click a command button.</pre>
@@ -153,6 +199,11 @@
         statusEl.textContent =
           "Backend: running\n" +
           "Safe commands: " + data.safe_command_count;
+
+        document.getElementById("project-version").textContent = data.project_version || "unknown";
+        document.getElementById("roadmap-stage").textContent = data.roadmap_stage || "unknown";
+        document.getElementById("safe-command-count").textContent = String(data.safe_command_count || 0);
+        document.getElementById("backend-state").textContent = data.ok ? "running" : "error";
       } catch (error) {
         statusEl.textContent = "Backend status failed: " + error;
       }

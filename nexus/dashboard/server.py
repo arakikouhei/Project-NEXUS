@@ -4,6 +4,7 @@ from typing import Any, Dict
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from config.settings import settings
 from nexus.agent.agent import NexusAgent
 
 
@@ -71,13 +72,17 @@ class DashboardBackend:
         }
 
     def status(self) -> Dict[str, Any]:
+        current_position = self.run_command("NEXUS現在地")
         return {
             "ok": True,
             "name": "Project NEXUS Dashboard Backend",
             "version": "v1",
+            "project_version": settings.VERSION,
+            "roadmap_stage": settings.ROADMAP_STAGE,
             "host": HOST,
             "port": PORT,
             "safe_command_count": len(SAFE_COMMANDS),
+            "current_position": current_position.get("result", ""),
             "allowed_commands": sorted(SAFE_COMMANDS),
         }
 
