@@ -102,6 +102,41 @@ TESTS = [
         expected="work-10056317",
     ),
     CommandTest(
+        name="File index overview",
+        command="ファイルインデックス",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index important files",
+        command="重要ファイル一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index docs",
+        command="docs一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index data",
+        command="data一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index tools",
+        command="tools一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index scripts",
+        command="scripts一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
+        name="File index prompts",
+        command="prompts一覧",
+        expected="## File Index",
+    ),
+    CommandTest(
         name="Memory answer current position",
         command="NEXUSは今どこまで進んだ？",
         expected="## Memory Answer",

@@ -26,6 +26,7 @@ from nexus.tools.memory_index import MemoryIndexTool
 from nexus.tools.work_notes import WorkNotesTool
 from nexus.tools.memory_review import MemoryReviewTool
 from nexus.tools.memory_answer import MemoryAnswerTool
+from nexus.tools.file_index import FileIndexTool
 from nexus.tools.web import WebTool
 from nexus.tools.research import SafeResearchTool
 from nexus.tools.safe_search import SafeSearchTool
@@ -72,6 +73,7 @@ class ToolManager:
         self.register(WorkNotesTool())
         self.register(MemoryReviewTool())
         self.register(MemoryAnswerTool())
+        self.register(FileIndexTool())
         self.register(TransferTool())
         self.register(SafeSearchTool())
         self.register(SafeResearchTool())
