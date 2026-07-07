@@ -87,6 +87,26 @@ TESTS = [
         expected="System Health",
     ),
     CommandTest(
+        name="Memory index overview",
+        command="記憶インデックス",
+        expected="## NEXUS Memory Index",
+    ),
+    CommandTest(
+        name="Memory categories",
+        command="記憶カテゴリ一覧",
+        expected="## Memory Categories",
+    ),
+    CommandTest(
+        name="Memory important items",
+        command="記憶重要項目",
+        expected="## Important Memory Items",
+    ),
+    CommandTest(
+        name="Memory files",
+        command="記憶ファイル一覧",
+        expected="## Memory Files",
+    ),
+    CommandTest(
         name="System health v0.5 overview",
         command="システム健康診断",
         expected="## v0.5 Project Overview",
