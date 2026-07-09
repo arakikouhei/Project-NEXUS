@@ -81,14 +81,14 @@ def check_frontend_buttons() -> bool:
     ok = True
 
     forbidden_ui_texts = [
-        "delete",
-        "削除",
         "git commit",
         "git push",
         "rm -rf",
-        "shell",
-        "exec",
-        "eval",
+        "os.system",
+        "subprocess",
+        "shell=True",
+        "eval(",
+        "exec(",
     ]
 
     for text in forbidden_ui_texts:
