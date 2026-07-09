@@ -58,7 +58,7 @@ def check_project_memory() -> bool:
     print("handled:", handled)
     print(result or "")
 
-    if handled and result and "Current Stage" in result and "v1.0 practical daily-use NEXUS completed" in result:
+    if handled and result and "Current Stage" in result and "v2.0 sphere AI device design foundation completed" in result:
         print("[PASS] Project Memory current stage")
         return True
 
@@ -153,7 +153,7 @@ def check_project_memory_file() -> bool:
     print("current_stage:", current_stage)
     print("recommended_next_stage:", next_stage)
 
-    if current_stage == "v1.0 practical daily-use NEXUS completed" and next_stage == "v1.1 expanded interaction / daily command refinement":
+    if current_stage == "v2.0 sphere AI device design foundation completed" and next_stage == "v2.1 daily command implementation / sphere UI prototype":
         print("[PASS] Project Memory file")
         return True
 
