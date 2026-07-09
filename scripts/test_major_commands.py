@@ -284,12 +284,12 @@ TESTS = [
     CommandTest(
         name="Project memory v0.8 stage",
         command="NEXUS現在地",
-        expected="v2.0 sphere AI device design foundation completed",
+        expected="v3.0 software-side sphere AI foundation completed",
     ),
     CommandTest(
         name="Project memory v0.9 next stage",
         command="NEXUS現在地",
-        expected="v2.1 daily command implementation / sphere UI prototype",
+        expected="v3.1 daily command integration / dashboard daily panel",
     ),
     CommandTest(
         name="Command list v0.5 research help",
@@ -369,7 +369,7 @@ TESTS = [
     CommandTest(
         name="Project memory current stage",
         command="NEXUS現在地",
-        expected="v2.0 sphere AI device design foundation completed",
+        expected="v3.0 software-side sphere AI foundation completed",
     ),
     CommandTest(
         name="Project memory overview",

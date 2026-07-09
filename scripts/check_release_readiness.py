@@ -94,8 +94,8 @@ def check_project_memory_position() -> bool:
     if (
         handled
         and result
-        and "v2.0 sphere AI device design foundation completed" in result
-        and "v2.1 daily command implementation / sphere UI prototype" in result
+        and "v3.0 software-side sphere AI foundation completed" in result
+        and "v3.1 daily command integration / dashboard daily panel" in result
     ):
         print("[PASS] Project Memory position")
         return True
