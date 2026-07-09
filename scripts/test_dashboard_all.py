@@ -1,6 +1,10 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 TESTS = [
@@ -18,9 +22,19 @@ def run_test(path: str) -> bool:
     print(f"Running: {path}")
     print("=" * 70)
 
+    env = os.environ.copy()
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = (
+        str(PROJECT_ROOT)
+        if not existing_pythonpath
+        else str(PROJECT_ROOT) + os.pathsep + existing_pythonpath
+    )
+
     result = subprocess.run(
         [sys.executable, path],
         text=True,
+        cwd=PROJECT_ROOT,
+        env=env,
     )
 
     if result.returncode == 0:
