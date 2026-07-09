@@ -79,18 +79,23 @@ def clean_test_snapshots() -> bool:
         print("[PASS] Clean test snapshots")
         return True
 
-    removed = 0
-    for path in snapshot_dir.glob("project_memory_snapshot_*.json"):
-        if path.is_file():
-            path.unlink()
-            removed += 1
+    result = subprocess.run(
+        ["git", "clean", "-f", "data/project/snapshots/"],
+        text=True,
+        capture_output=True,
+    )
 
-    for path in snapshot_dir.glob("project_memory_snapshot_*.md"):
-        if path.is_file():
-            path.unlink()
-            removed += 1
+    if result.returncode != 0:
+        print("[FAIL] git clean for test snapshots failed")
+        print(result.stderr)
+        return False
 
-    print(f"removed test snapshots: {removed}")
+    output = result.stdout.strip()
+    if output:
+        print(output)
+    else:
+        print("no untracked test snapshots to clean")
+
     print("[PASS] Clean test snapshots")
     return True
 
