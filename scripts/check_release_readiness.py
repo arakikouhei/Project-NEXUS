@@ -94,8 +94,8 @@ def check_project_memory_position() -> bool:
     if (
         handled
         and result
-        and "v0.9 integrated testing / stabilization completed" in result
-        and "v1.0 planning / practical daily-use NEXUS" in result
+        and "v1.0 practical daily-use NEXUS completed" in result
+        and "v1.1 expanded interaction / daily command refinement" in result
     ):
         print("[PASS] Project Memory position")
         return True
