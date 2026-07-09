@@ -58,7 +58,7 @@ def check_project_memory() -> bool:
     print("handled:", handled)
     print(result or "")
 
-    if handled and result and "Current Stage" in result and "v0.8 dashboard / interaction layer completed" in result:
+    if handled and result and "Current Stage" in result and "v0.9 integrated testing / stabilization completed" in result:
         print("[PASS] Project Memory current stage")
         return True
 
@@ -153,7 +153,7 @@ def check_project_memory_file() -> bool:
     print("current_stage:", current_stage)
     print("recommended_next_stage:", next_stage)
 
-    if current_stage == "v0.8 dashboard / interaction layer completed" and next_stage == "v0.9 planning / stabilization":
+    if current_stage == "v0.9 integrated testing / stabilization completed" and next_stage == "v1.0 planning / practical daily-use NEXUS":
         print("[PASS] Project Memory file")
         return True
 
